@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Expense_Flow.Views.PaymentModes.PaymentModeDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Expense_Flow.Models"
+    mc:Ignorable="d"
+    Style="{StaticResource ModernContentDialogStyle}"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    DefaultButton="Primary">
+
+    <ScrollViewer MaxHeight="600">
+        <StackPanel Spacing="16" MinWidth="450">
+            <TextBlock x:Name="ErrorTextBlock"
+                       Foreground="{StaticResource ErrorBrush}"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Name *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                <TextBox x:Name="NameTextBox" 
+                         PlaceholderText="Enter payment mode name"
+                         Style="{StaticResource ModernTextBoxStyle}"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Type *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                <ComboBox x:Name="TypeComboBox"
+                          HorizontalAlignment="Stretch"
+                          SelectionChanged="TypeComboBox_SelectionChanged"
+                          Style="{StaticResource ModernComboBoxStyle}">
+                    <ComboBoxItem Content="Card" Tag="Card"/>
+                    <ComboBoxItem Content="Cash" Tag="Cash"/>
+                    <ComboBoxItem Content="UPI" Tag="UPI"/>
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Contact *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                <ComboBox x:Name="ContactComboBox"
+                          ItemsSource="{x:Bind Contacts, Mode=OneWay}"
+                          DisplayMemberPath="Name"
+                          HorizontalAlignment="Stretch"
+                          Style="{StaticResource ModernComboBoxStyle}"/>
+            </StackPanel>
+
+            <!-- Card Fields -->
+            <StackPanel x:Name="CardFieldsPanel" Spacing="16" Visibility="Collapsed">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Card Type *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                    <TextBox x:Name="CardTypeTextBox" 
+                             PlaceholderText="e.g., Visa, Mastercard, Amex"
+                             Style="{StaticResource ModernTextBoxStyle}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Last Four Digits *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                    <TextBox x:Name="LastFourDigitsTextBox" 
+                             PlaceholderText="Last 4 digits of card"
+                             MaxLength="4"
+                             InputScope="Number"
+                             Style="{StaticResource ModernTextBoxStyle}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Cash Fields -->
+            <StackPanel x:Name="CashFieldsPanel" Spacing="4" Visibility="Collapsed">
+                <TextBlock Text="Balance *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                <TextBox x:Name="BalanceTextBox" 
+                         PlaceholderText="Current balance"
+                         InputScope="Number"
+                         Style="{StaticResource ModernTextBoxStyle}"/>
+            </StackPanel>
+
+            <!-- UPI Fields -->
+            <StackPanel x:Name="UpiFieldsPanel" Spacing="4" Visibility="Collapsed">
+                <TextBlock Text="UPI ID *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                <TextBox x:Name="UpiIdTextBox" 
+                         PlaceholderText="username@bank"
+                         Style="{StaticResource ModernTextBoxStyle}"/>
+            </StackPanel>
+
+            <TextBlock Text="* Required fields" 
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

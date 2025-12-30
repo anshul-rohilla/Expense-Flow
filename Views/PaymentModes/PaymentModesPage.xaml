@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page x:Class="Expense_Flow.Views.PaymentModes.PaymentModesPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:models="using:Expense_Flow.Models"
+      xmlns:converters="using:Expense_Flow.Converters"
+      xmlns:local="using:Expense_Flow.Views.PaymentModes"
+      mc:Ignorable="d">
+
+    <Page.Resources>
+        <!-- Converters -->
+        <converters:PaymentModeGradientConverter x:Key="PaymentModeGradientConverter"/>
+        <converters:PaymentModeDisplayConverter x:Key="PaymentModeDisplayConverter"/>
+        <converters:PaymentModeBalanceConverter x:Key="PaymentModeBalanceConverter"/>
+        <converters:PaymentModeTypeToCurrencyConverter x:Key="PaymentModeTypeToCurrencyConverter"/>
+        
+        <!-- Credit Card Gradients -->
+        <LinearGradientBrush x:Key="DefaultCardGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#667EEA" Offset="0"/>
+            <GradientStop Color="#764BA2" Offset="1"/>
+        </LinearGradientBrush>
+        
+        <LinearGradientBrush x:Key="CashGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#11998E" Offset="0"/>
+            <GradientStop Color="#38EF7D" Offset="1"/>
+        </LinearGradientBrush>
+        
+        <LinearGradientBrush x:Key="UpiGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#F093FB" Offset="0"/>
+            <GradientStop Color="#F5576C" Offset="1"/>
+        </LinearGradientBrush>
+    </Page.Resources>
+
+    <Grid x:Name="RootGrid">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <!-- Compact -->
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RootGrid.Padding" Value="16"/>
+                        <Setter Target="FilterPills.Orientation" Value="Vertical"/>
+                        <Setter Target="FilterPills.Spacing" Value="8"/>
+                        <Setter Target="FilterLabel.Visibility" Value="Collapsed"/>
+                        <Setter Target="PaymentModesGrid.MinItemWidth" Value="320"/>
+                        <Setter Target="PaymentModesGrid.MinItemHeight" Value="240"/>
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Medium -->
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="640" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RootGrid.Padding" Value="24"/>
+                        <Setter Target="FilterPills.Orientation" Value="Horizontal"/>
+                        <Setter Target="FilterPills.Spacing" Value="12"/>
+                        <Setter Target="FilterLabel.Visibility" Value="Visible"/>
+                        <Setter Target="PaymentModesGrid.MinItemWidth" Value="360"/>
+                        <Setter Target="PaymentModesGrid.MinItemHeight" Value="240"/>
+                    </VisualState.Setters>
+                </VisualState>
+                
+                <!-- Large -->
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1007" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RootGrid.Padding" Value="32,24,32,32"/>
+                        <Setter Target="PaymentModesGrid.MinItemWidth" Value="380"/>
+                        <Setter Target="PaymentModesGrid.MinItemHeight" Value="240"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header Section -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="8">
+                <TextBlock Text="Payment Modes"
+                           Style="{StaticResource PageTitleTextStyle}" />
+                <TextBlock Text="Manage your payment methods and modes"
+                           Style="{StaticResource BodyTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                    Content="Add Payment Mode"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    VerticalAlignment="Center"
+                    Click="AddPaymentMode_Click">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="N" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Grid>
+
+        <!-- Type Filter Pills -->
+        <Border Grid.Row="1"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                CornerRadius="12"
+                Padding="16"
+                Margin="0,0,0,16"
+                Translation="0,0,8">
+            <StackPanel x:Name="FilterPills" Orientation="Horizontal" Spacing="12">
+                <TextBlock x:Name="FilterLabel"
+                           Text="Filter by Type:"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource BodyStrongTextBlockStyle}"
+                           Margin="0,0,8,0" />
+
+                <Button Content="All" Tag="All"
+                        Click="FilterByType_Click"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Padding="16,8" />
+
+                <Button Content="Card" Tag="Card"
+                        Click="FilterByType_Click"
+                        Padding="16,8" />
+
+                <Button Content="Cash" Tag="Cash"
+                        Click="FilterByType_Click"
+                        Padding="16,8" />
+
+                <Button Content="UPI" Tag="UPI"
+                        Click="FilterByType_Click"
+                        Padding="16,8" />
+            </StackPanel>
+        </Border>
+
+        <!-- Search Bar -->
+        <Border Grid.Row="2"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                CornerRadius="12"
+                Padding="16"
+                Margin="0,0,0,24"
+                Translation="0,0,8">
+            <TextBox PlaceholderText="Search payment modes..."
+                     Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     BorderThickness="0"
+                     Background="Transparent">
+                <TextBox.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F" Modifiers="Control" />
+                </TextBox.KeyboardAccelerators>
+            </TextBox>
+        </Border>
+
+        <!-- Content -->
+        <Grid Grid.Row="3">
+            <!-- Loading Indicator -->
+            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+                          Width="50" Height="50"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+            <!-- Empty State -->
+            <Border Style="{StaticResource StatCardStyle}"
+                    Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                    Translation="0,0,16"
+                    Visibility="{x:Bind ViewModel.FilteredPaymentModes.Count, Mode=OneWay, Converter={StaticResource CountToVisibilityConverter}}">
+                <StackPanel Spacing="20" Padding="48">
+                    <Border Background="{StaticResource WarningGradientBrush}"
+                            Width="80" Height="80"
+                            CornerRadius="40"
+                            HorizontalAlignment="Center">
+                        <FontIcon Glyph="&#xE8C7;" FontSize="40" Foreground="White" />
+                    </Border>
+                    <TextBlock Text="No payment modes yet"
+                               Style="{StaticResource SectionTitleTextStyle}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Add payment modes to track how expenses are paid"
+                               Style="{StaticResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               MaxWidth="400" />
+                    <Button Content="Add Your First Payment Mode"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            HorizontalAlignment="Center"
+                            Click="AddPaymentMode_Click" />
+                </StackPanel>
+            </Border>
+
+            <!-- Payment Modes Grid -->
+            <ScrollViewer Visibility="{x:Bind ViewModel.FilteredPaymentModes.Count, Mode=OneWay, Converter={StaticResource InverseCountToVisibilityConverter}}">
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.FilteredPaymentModes, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout x:Name="PaymentModesGrid"
+                                           MinItemWidth="360"
+                                           MinItemHeight="240"
+                                           ItemsStretch="Fill" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="models:PaymentMode">
+                            <Grid Margin="8">
+                                <!-- Payment Card Design -->
+                                <Border CornerRadius="16"
+                                        Background="{x:Bind Type, Converter={StaticResource PaymentModeGradientConverter}}"
+                                        Translation="0,0,32"
+                                        MinHeight="200">
+                                    <Border.Shadow>
+                                        <ThemeShadow />
+                                    </Border.Shadow>
+                                    
+                                    <Grid Padding="24,20,24,20" RowSpacing="12">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Card Header: Chip & Contactless Icon -->
+                                        <Grid Grid.Row="0" Height="40">
+                                            <!-- EMV Chip (visible for all types) -->
+                                            <Border Width="48" Height="36"
+                                                    CornerRadius="6"
+                                                    Background="#FFD700"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center">
+                                                <Border.Shadow>
+                                                    <ThemeShadow />
+                                                </Border.Shadow>
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition/>
+                                                        <RowDefinition/>
+                                                        <RowDefinition/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition/>
+                                                        <ColumnDefinition/>
+                                                        <ColumnDefinition/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse Grid.Row="1" Grid.Column="0" Fill="#DAA520" Margin="2"/>
+                                                    <Ellipse Grid.Row="1" Grid.Column="1" Fill="#DAA520" Margin="2"/>
+                                                    <Ellipse Grid.Row="1" Grid.Column="2" Fill="#DAA520" Margin="2"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Contactless Icon -->
+                                            <Viewbox Width="28" Height="28"
+                                                     HorizontalAlignment="Right"
+                                                     VerticalAlignment="Center">
+                                                <Path Fill="White" Opacity="0.6"
+                                                      Data="M12,2C10.74,2 9.5,2.45 8.5,3.35L9.91,4.76C10.56,4.26 11.26,4 12,4C13.87,4 15.5,5.57 15.5,7.5C15.5,8.24 15.24,8.94 14.74,9.59L16.15,11C17.05,10 17.5,8.76 17.5,7.5C17.5,4.46 15.04,2 12,2M12,6C10.07,6 8.5,7.57 8.5,9.5C8.5,10.26 8.76,10.96 9.26,11.61L10.67,10.2C10.36,9.78 10.25,9.26 10.25,8.75C10.25,7.78 11.03,7 12,7C12.97,7 13.75,7.78 13.75,8.75C13.75,9.26 13.64,9.78 13.33,10.2L14.74,11.61C15.24,10.96 15.5,10.26 15.5,9.5C15.5,7.57 13.93,6 12,6M12,10C11.17,10 10.5,10.67 10.5,11.5C10.5,12.33 11.17,13 12,13C12.83,13 13.5,12.33 13.5,11.5C13.5,10.67 12.83,10 12,10Z"/>
+                                            </Viewbox>
+                                        </Grid>
+
+                                        <!-- Card/UPI Number or Balance -->
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="0" Margin="0,8,0,8">
+                                            <TextBlock x:Name="CurrencyPrefix"
+                                                     Text="{x:Bind Type, Converter={StaticResource PaymentModeTypeToCurrencyConverter}}"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="White"
+                                                     FontSize="20"
+                                                     FontWeight="SemiBold"
+                                                     FontFamily="Consolas,Segoe UI"/>
+                                            <TextBlock Text="{x:Bind DisplayNumber}"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="White"
+                                                     FontSize="20"
+                                                     FontWeight="SemiBold"
+                                                     FontFamily="Consolas,Segoe UI"/>
+                                        </StackPanel>
+
+                                        <!-- Holder Name & Valid Thru -->
+                                        <Grid Grid.Row="2" ColumnSpacing="20" Margin="0,0,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Spacing="4">
+                                                <TextBlock Text="{x:Bind HolderLabel}"
+                                                           Foreground="White"
+                                                           Opacity="0.7"
+                                                           FontSize="9"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="{x:Bind Contact.Name}"
+                                                           Foreground="White"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxLines="1"/>
+                                                <TextBlock Text="{x:Bind Name}"
+                                                           Foreground="White"
+                                                           Opacity="0.8"
+                                                           FontSize="10"
+                                                           FontWeight="Normal"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxLines="1"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="VALID THRU"
+                                                           Foreground="White"
+                                                           Opacity="0.7"
+                                                           FontSize="9"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="XX/XX"
+                                                           Foreground="White"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           FontFamily="Consolas,Segoe UI"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Brand & Actions -->
+                                        <Grid Grid.Row="3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Display Brand: VISA/UPI/CASH -->
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{x:Bind DisplayBrand}"
+                                                       Foreground="White"
+                                                       FontSize="16"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center"
+                                                       Opacity="0.9"/>
+
+                                            <StackPanel Grid.Column="1"
+                                                        Orientation="Horizontal"
+                                                        Spacing="8">
+                                                <Button Width="36" Height="36"
+                                                        CornerRadius="18"
+                                                        Background="#40FFFFFF"
+                                                        BorderThickness="0"
+                                                        ToolTipService.ToolTip="Edit"
+                                                        Click="EditPaymentMode_Click"
+                                                        Tag="{x:Bind}">
+                                                    <FontIcon Glyph="&#xE70F;" FontSize="12" Foreground="White"/>
+                                                </Button>
+                                                <Button Width="36" Height="36"
+                                                        CornerRadius="18"
+                                                        Background="#40FF0000"
+                                                        BorderThickness="0"
+                                                        ToolTipService.ToolTip="Delete"
+                                                        Click="DeletePaymentMode_Click"
+                                                        Tag="{x:Bind}">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="12" Foreground="White"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

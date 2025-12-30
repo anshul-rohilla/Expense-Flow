@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Expense Flow (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Expense Flow (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

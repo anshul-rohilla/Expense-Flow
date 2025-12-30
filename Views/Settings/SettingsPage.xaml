@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Expense_Flow.Views.Settings.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+  <Grid x:Name="RootGrid">
+    <VisualStateManager.VisualStateGroups>
+      <VisualStateGroup>
+        <!-- Compact -->
+        <VisualState>
+          <VisualState.StateTriggers>
+            <AdaptiveTrigger MinWindowWidth="0" />
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter Target="RootGrid.Padding" Value="16"/>
+            <Setter Target="ActionButtonsGrid.ColumnDefinitions[0].Width" Value="*"/>
+            <Setter Target="ActionButtonsGrid.ColumnDefinitions[1].Width" Value="0"/>
+            <Setter Target="BackupButton.(Grid.Column)" Value="0"/>
+            <Setter Target="BackupButton.(Grid.Row)" Value="0"/>
+            <Setter Target="RestoreButton.(Grid.Column)" Value="0"/>
+            <Setter Target="RestoreButton.(Grid.Row)" Value="1"/>
+            <Setter Target="ActionButtonsGrid.RowSpacing" Value="12"/>
+          </VisualState.Setters>
+        </VisualState>
+        
+        <!-- Medium -->
+        <VisualState>
+          <VisualState.StateTriggers>
+            <AdaptiveTrigger MinWindowWidth="640" />
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter Target="RootGrid.Padding" Value="24"/>
+            <Setter Target="ActionButtonsGrid.ColumnDefinitions[0].Width" Value="*"/>
+            <Setter Target="ActionButtonsGrid.ColumnDefinitions[1].Width" Value="*"/>
+            <Setter Target="BackupButton.(Grid.Column)" Value="0"/>
+            <Setter Target="BackupButton.(Grid.Row)" Value="0"/>
+            <Setter Target="RestoreButton.(Grid.Column)" Value="1"/>
+            <Setter Target="RestoreButton.(Grid.Row)" Value="0"/>
+            <Setter Target="ActionButtonsGrid.RowSpacing" Value="0"/>
+          </VisualState.Setters>
+        </VisualState>
+        
+        <!-- Large -->
+        <VisualState>
+          <VisualState.StateTriggers>
+            <AdaptiveTrigger MinWindowWidth="1007" />
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter Target="RootGrid.Padding" Value="32,24,32,32"/>
+          </VisualState.Setters>
+        </VisualState>
+      </VisualStateGroup>
+    </VisualStateManager.VisualStateGroups>
+
+    <ScrollViewer>
+      <StackPanel Spacing="32">
+        <!-- Header -->
+        <StackPanel Spacing="8">
+          <TextBlock Text="Settings"
+                   Style="{StaticResource PageTitleTextStyle}"/>
+          <TextBlock Text="Customize your Expense Flow experience"
+                   Style="{StaticResource BodyTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Appearance Section -->
+        <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              Style="{StaticResource CardStyle}"
+              Translation="0,0,8">
+          <StackPanel Spacing="16">
+            <TextBlock Text="Appearance"
+                     Style="{StaticResource SectionTitleTextStyle}"/>
+
+            <!-- Theme Selector -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Theme"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <ComboBox x:Name="ThemeSelector"
+                      PlaceholderText="Select theme"
+                      SelectedIndex="0"
+                      SelectionChanged="ThemeSelector_SelectionChanged"
+                      HorizontalAlignment="Stretch"
+                      Style="{StaticResource ModernComboBoxStyle}">
+                <ComboBoxItem Content="System Default" Tag="Default"/>
+                <ComboBoxItem Content="Light" Tag="Light"/>
+                <ComboBoxItem Content="Dark" Tag="Dark"/>
+              </ComboBox>
+            </StackPanel>
+
+            <!-- Backdrop Type -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Window Backdrop"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <ComboBox PlaceholderText="Select backdrop"
+                      SelectedIndex="0"
+                      HorizontalAlignment="Stretch"
+                      Style="{StaticResource ModernComboBoxStyle}">
+                <ComboBoxItem Content="Mica" Tag="Mica"/>
+                <ComboBoxItem Content="Mica Alt" Tag="MicaAlt"/>
+                <ComboBoxItem Content="Acrylic" Tag="Acrylic"/>
+                <ComboBoxItem Content="None" Tag="None"/>
+              </ComboBox>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Application Section -->
+        <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              Style="{StaticResource CardStyle}"
+              Translation="0,0,8">
+          <StackPanel Spacing="16">
+            <TextBlock Text="Application"
+                     Style="{StaticResource SectionTitleTextStyle}"/>
+
+            <!-- Currency -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Currency"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <ComboBox x:Name="CurrencyComboBox"
+                      PlaceholderText="Select currency"
+                      SelectedIndex="0"
+                      SelectionChanged="CurrencySelector_SelectionChanged"
+                      HorizontalAlignment="Stretch"
+                      Style="{StaticResource ModernComboBoxStyle}">
+                <ComboBoxItem Content="US Dollar ($)" Tag="USD"/>
+                <ComboBoxItem Content="Euro (€)" Tag="EUR"/>
+                <ComboBoxItem Content="British Pound (£)" Tag="GBP"/>
+                <ComboBoxItem Content="Indian Rupee (₹)" Tag="INR"/>
+              </ComboBox>
+            </StackPanel>
+
+            <!-- Date Format -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Date Format"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <ComboBox x:Name="DateFormatComboBox"
+                      PlaceholderText="Select date format"
+                      SelectedIndex="0"
+                      SelectionChanged="DateFormatSelector_SelectionChanged"
+                      HorizontalAlignment="Stretch"
+                      Style="{StaticResource ModernComboBoxStyle}">
+                <ComboBoxItem Content="MM/DD/YYYY" Tag="MM/DD/YYYY"/>
+                <ComboBoxItem Content="DD/MM/YYYY" Tag="DD/MM/YYYY"/>
+                <ComboBoxItem Content="YYYY-MM-DD" Tag="YYYY-MM-DD"/>
+              </ComboBox>
+            </StackPanel>
+
+            <!-- Startup -->
+            <ToggleSwitch x:Name="LaunchOnStartupToggle"
+                        Header="Launch on startup" 
+                        IsOn="False"
+                        Toggled="LaunchOnStartup_Toggled"/>
+          </StackPanel>
+        </Border>
+
+        <!-- Expense/Subscription Types Section -->
+        <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              Style="{StaticResource CardStyle}"
+              Translation="0,0,8">
+          <StackPanel Spacing="16">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="Expense &amp; Subscription Types"
+                         Style="{StaticResource SectionTitleTextStyle}"/>
+                <TextBlock Text="Manage categories for your expenses and subscriptions"
+                         Style="{StaticResource CaptionTextBlockStyle}"
+                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              </StackPanel>
+
+              <Button Grid.Column="1"
+                    Content="Add Type"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="AddExpenseType_Click"
+                    VerticalAlignment="Center">
+                <Button.KeyboardAccelerators>
+                  <KeyboardAccelerator Key="T" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
+              </Button>
+            </Grid>
+
+            <!-- Types List -->
+            <ItemsRepeater x:Name="TypesRepeater"
+                          ItemsSource="{x:Bind ViewModel.ExpenseTypes, Mode=OneWay}">
+              <ItemsRepeater.Layout>
+                <StackLayout Spacing="8"/>
+              </ItemsRepeater.Layout>
+              <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="models:ExpenseType"
+                             xmlns:models="using:Expense_Flow.Models">
+                  <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        CornerRadius="8"
+                        Padding="12">
+                    <Grid ColumnSpacing="12">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+
+                      <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{x:Bind Name}"
+                                 Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="{x:Bind IsDefault, Converter={StaticResource BoolToDefaultLabelConverter}}"
+                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                 Visibility="{x:Bind IsDefault, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                      </StackPanel>
+
+                      <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="4"
+                                VerticalAlignment="Center">
+                        <Button Width="32" Height="32"
+                              Padding="0"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              ToolTipService.ToolTip="Edit"
+                              Click="EditExpenseType_Click"
+                              Tag="{x:Bind}">
+                          <FontIcon Glyph="&#xE70F;" FontSize="14"/>
+                        </Button>
+                        <Button Width="32" Height="32"
+                              Padding="0"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              ToolTipService.ToolTip="Delete"
+                              Click="DeleteExpenseType_Click"
+                              Tag="{x:Bind}"
+                              IsEnabled="{x:Bind IsDefault, Converter={StaticResource InverseBoolConverter}}">
+                          <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{StaticResource ErrorBrush}"/>
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+
+            <!-- Empty State -->
+            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                  CornerRadius="8"
+                  Padding="24"
+                  Visibility="{x:Bind ViewModel.ExpenseTypes.Count, Mode=OneWay, Converter={StaticResource CountToVisibilityConverter}}">
+              <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE8FD;" FontSize="32" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock Text="No expense types yet"
+                         Style="{StaticResource BodyStrongTextBlockStyle}"
+                         HorizontalAlignment="Center"/>
+                <TextBlock Text="Add types to categorize your expenses"
+                         Style="{StaticResource CaptionTextBlockStyle}"
+                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                         HorizontalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <!-- Data Management Section -->
+        <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              Style="{StaticResource CardStyle}"
+              Translation="0,0,8">
+          <StackPanel Spacing="16">
+            <TextBlock Text="Data Management"
+                     Style="{StaticResource SectionTitleTextStyle}"/>
+
+            <!-- Database Location -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Database Location"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                    CornerRadius="8"
+                    Padding="12">
+                <TextBlock x:Name="DatabasePathText"
+                         Style="{StaticResource CaptionTextBlockStyle}"
+                         TextWrapping="Wrap"/>
+              </Border>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <Grid x:Name="ActionButtonsGrid" ColumnSpacing="12">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid.RowSpacing>0</Grid.RowSpacing>
+
+              <Button x:Name="BackupButton"
+                    Grid.Column="0" Grid.Row="0"
+                    Content="Backup Data"
+                    HorizontalAlignment="Stretch">
+                <Button.Resources>
+                  <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource SuccessColor}"/>
+                </Button.Resources>
+              </Button>
+
+              <Button x:Name="RestoreButton"
+                    Grid.Column="1" Grid.Row="0"
+                    Content="Restore Data"
+                    HorizontalAlignment="Stretch">
+                <Button.Resources>
+                  <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource WarningColor}"/>
+                </Button.Resources>
+              </Button>
+            </Grid>
+
+            <Button Content="Clear All Data"
+                  HorizontalAlignment="Stretch">
+              <Button.Resources>
+                <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource ErrorColor}"/>
+              </Button.Resources>
+            </Button>
+          </StackPanel>
+        </Border>
+
+        <!-- About Section -->
+        <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              Style="{StaticResource CardStyle}"
+              Translation="0,0,8">
+          <StackPanel Spacing="16">
+            <TextBlock Text="About"
+                     Style="{StaticResource SectionTitleTextStyle}"/>
+
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+
+              <Border Grid.Column="0"
+                    Background="{StaticResource PrimaryGradientBrush}"
+                    Width="64" Height="64"
+                    CornerRadius="16">
+                <FontIcon Glyph="&#xE8C7;"
+                        Foreground="White"
+                        FontSize="32"/>
+              </Border>
+
+              <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Spacing="4">
+                <TextBlock Text="Expense Flow"
+                         Style="{StaticResource CardTitleTextStyle}"/>
+                <TextBlock Text="Version 1.0.0"
+                         Style="{StaticResource CaptionTextBlockStyle}"
+                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock Text="Modern expense tracking for Windows"
+                         Style="{StaticResource CaptionTextBlockStyle}"
+                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              </StackPanel>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <HyperlinkButton Content="Privacy Policy"/>
+              <HyperlinkButton Content="Terms of Service"/>
+              <HyperlinkButton Content="Help &amp; Support"/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</Page>

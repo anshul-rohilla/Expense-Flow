@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog x:Class="Expense_Flow.Views.Contacts.ContactDialog"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               mc:Ignorable="d"
+               Style="{StaticResource ModernContentDialogStyle}"
+               PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+               SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+               DefaultButton="Primary">
+
+    <StackPanel Spacing="16"
+                MinWidth="400">
+        <!-- Error Message -->
+        <TextBlock x:Name="ErrorTextBlock"
+                   Foreground="{StaticResource ErrorBrush}"
+                   TextWrapping="Wrap"
+                   Visibility="Collapsed"/>
+
+        <!-- Name -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Name *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="NameTextBox" 
+                     PlaceholderText="Enter contact name"
+                     Style="{StaticResource ModernTextBoxStyle}"/>
+        </StackPanel>
+
+        <!-- Email -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Email *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="EmailTextBox" 
+                     PlaceholderText="example@email.com"
+                     InputScope="EmailSmtpAddress"
+                     Style="{StaticResource ModernTextBoxStyle}"/>
+        </StackPanel>
+
+        <!-- Phone -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Phone *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="PhoneTextBox" 
+                     PlaceholderText="+1 (555) 123-4567"
+                     InputScope="TelephoneNumber"
+                     Style="{StaticResource ModernTextBoxStyle}"/>
+        </StackPanel>
+
+        <!-- Reference -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Reference" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="ReferenceTextBox" 
+                     PlaceholderText="Enter reference (optional)"
+                     Style="{StaticResource ModernTextBoxStyle}"/>
+        </StackPanel>
+
+        <TextBlock Text="* Required fields" 
+                   Style="{StaticResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </StackPanel>
+</ContentDialog>

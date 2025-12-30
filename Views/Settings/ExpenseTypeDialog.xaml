@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Expense_Flow.Views.Settings.ExpenseTypeDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Style="{StaticResource ModernContentDialogStyle}"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    DefaultButton="Primary">
+
+    <StackPanel Spacing="16" MinWidth="450">
+        <TextBlock x:Name="ErrorTextBlock"
+                   Foreground="{StaticResource ErrorBrush}"
+                   TextWrapping="Wrap"
+                   Visibility="Collapsed"/>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Name *" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="NameTextBox" 
+                     PlaceholderText="Enter type name (e.g., Food &amp; Dining, Transportation, Entertainment)"
+                     Style="{StaticResource ModernTextBoxStyle}"/>
+        </StackPanel>
+
+        <TextBlock Text="* Required fields" 
+                   Style="{StaticResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </StackPanel>
+</ContentDialog>

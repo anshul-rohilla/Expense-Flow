@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog x:Class="Expense_Flow.Views.Expenses.ExpenseDialog"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               mc:Ignorable="d"
+               Style="{StaticResource ModernContentDialogStyle}"
+               PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+               SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+               DefaultButton="Primary">
+
+    <ScrollViewer MaxHeight="600">
+        <StackPanel Spacing="16"
+                    MinWidth="450">
+            <TextBlock x:Name="ErrorTextBlock"
+                       Foreground="{StaticResource ErrorBrush}"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed" />
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Name *"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBox x:Name="NameTextBox"
+                         PlaceholderText="Enter expense name"
+                         Style="{StaticResource ModernTextBoxStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Invoice Number *"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBox x:Name="InvoiceNumberTextBox"
+                         PlaceholderText="Enter invoice number"
+                         Style="{StaticResource ModernTextBoxStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Invoice Amount *"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBox x:Name="InvoiceAmountTextBox"
+                         PlaceholderText="Enter amount"
+                         InputScope="Number"
+                         Style="{StaticResource ModernTextBoxStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Project *"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <ComboBox x:Name="ProjectComboBox"
+                          ItemsSource="{x:Bind Projects, Mode=OneWay}"
+                          DisplayMemberPath="Name"
+                          HorizontalAlignment="Stretch"
+                          Style="{StaticResource ModernComboBoxStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Payment Mode *"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <ComboBox x:Name="PaymentModeComboBox"
+                          ItemsSource="{x:Bind PaymentModes, Mode=OneWay}"
+                          DisplayMemberPath="Name"
+                          HorizontalAlignment="Stretch"
+                          Style="{StaticResource ModernComboBoxStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Subscription"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <ComboBox x:Name="SubscriptionComboBox"
+                          ItemsSource="{x:Bind Subscriptions, Mode=OneWay}"
+                          DisplayMemberPath="Name"
+                          HorizontalAlignment="Stretch"
+                          Style="{StaticResource ModernComboBoxStyle}" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Description"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBox x:Name="DescriptionTextBox"
+                         PlaceholderText="Enter description"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         MinHeight="80"
+                         Style="{StaticResource ModernTextBoxStyle}" />
+            </StackPanel>
+
+            <TextBlock Text="* Required fields"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>
