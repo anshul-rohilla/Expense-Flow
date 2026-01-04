@@ -10,83 +10,256 @@
                SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
                DefaultButton="Primary">
 
-    <ScrollViewer MaxHeight="600">
-        <StackPanel Spacing="16"
-                    MinWidth="450">
+    <ScrollViewer MaxHeight="700">
+        <StackPanel Spacing="20" MinWidth="500">
+            <!-- Error Message -->
             <TextBlock x:Name="ErrorTextBlock"
                        Foreground="{StaticResource ErrorBrush}"
                        TextWrapping="Wrap"
-                       Visibility="Collapsed" />
+                       Visibility="Collapsed"
+                       Margin="0,0,0,8" />
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="Name *"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <TextBox x:Name="NameTextBox"
-                         PlaceholderText="Enter expense name"
-                         Style="{StaticResource ModernTextBoxStyle}" />
+            <!-- Section 1: Basic Information -->
+            <StackPanel Spacing="16">
+                <TextBlock Text="Basic Information"
+                           Style="{StaticResource SectionTitleTextStyle}"
+                           Foreground="{StaticResource AccentBrush}" />
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Expense Name *"
+                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="NameTextBox"
+                             PlaceholderText="e.g., Office Supplies, Lunch Meeting"
+                             Style="{StaticResource ModernTextBoxStyle}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Expense Type *"
+                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <ComboBox x:Name="ExpenseTypeComboBox"
+                              ItemsSource="{x:Bind ExpenseTypes, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Select expense type"
+                              Style="{StaticResource ModernComboBoxStyle}"
+                              SelectionChanged="ExpenseTypeComboBox_SelectionChanged" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Amount *"
+                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="AmountTextBox"
+                             PlaceholderText="0.00"
+                             Text="0"
+                             InputScope="Number"
+                             Style="{StaticResource ModernTextBoxStyle}" />
+                    <TextBlock Text="Amount must be 0 or greater"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               FontSize="11" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Description"
+                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="DescriptionTextBox"
+                             PlaceholderText="Additional details about this expense (optional)"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             MinHeight="60"
+                             Style="{StaticResource ModernTextBoxStyle}" />
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="Invoice Number *"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <TextBox x:Name="InvoiceNumberTextBox"
-                         PlaceholderText="Enter invoice number"
-                         Style="{StaticResource ModernTextBoxStyle}" />
+            <!-- Section 2: Invoice Details (Optional) -->
+            <StackPanel Spacing="16">
+                <CheckBox x:Name="HasInvoiceCheckBox"
+                          Content="This expense has an invoice"
+                          Checked="HasInvoiceCheckBox_CheckedChanged"
+                          Unchecked="HasInvoiceCheckBox_CheckedChanged" />
+
+                <StackPanel x:Name="InvoiceDetailsPanel"
+                            Spacing="16"
+                            Visibility="Collapsed">
+                    
+                    <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                            CornerRadius="8"
+                            Padding="16">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Invoice Details"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Foreground="{StaticResource AccentBrush}" />
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Invoice Number *"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <TextBox x:Name="InvoiceNumberTextBox"
+                                         PlaceholderText="e.g., INV-2025-001"
+                                         Style="{StaticResource ModernTextBoxStyle}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Invoice Date *"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <CalendarDatePicker x:Name="InvoiceDatePicker"
+                                                    PlaceholderText="Select invoice date"
+                                                    HorizontalAlignment="Stretch" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Billing Period (Optional)"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="Start Date"
+                                                   Style="{StaticResource CaptionTextBlockStyle}" />
+                                        <CalendarDatePicker x:Name="BillingStartDatePicker"
+                                                            PlaceholderText="Start"
+                                                            HorizontalAlignment="Stretch" />
+                                    </StackPanel>
+
+                                    <FontIcon Grid.Column="1"
+                                              Glyph="&#xE76C;"
+                                              FontSize="12"
+                                              VerticalAlignment="Center"
+                                              Margin="0,20,0,0" />
+
+                                    <StackPanel Grid.Column="2" Spacing="4">
+                                        <TextBlock Text="End Date"
+                                                   Style="{StaticResource CaptionTextBlockStyle}" />
+                                        <CalendarDatePicker x:Name="BillingEndDatePicker"
+                                                            PlaceholderText="End"
+                                                            HorizontalAlignment="Stretch" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Invoice Attachment (Optional)"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <Button x:Name="UploadFileButton"
+                                        Content="?? Choose File (Max 10MB)"
+                                        Click="UploadFileButton_Click"
+                                        HorizontalAlignment="Stretch" />
+                                <TextBlock x:Name="FileNameText"
+                                           Text="No file selected"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0" />
+                                <TextBlock Text="Supported: JPG, JPEG, PNG, PDF (Max 10MB)"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                           FontSize="10" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="Invoice Amount *"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <TextBox x:Name="InvoiceAmountTextBox"
-                         PlaceholderText="Enter amount"
-                         InputScope="Number"
-                         Style="{StaticResource ModernTextBoxStyle}" />
+            <!-- Section 3: Payment Details (Mandatory) -->
+            <StackPanel Spacing="16">
+                <TextBlock Text="Payment Details"
+                           Style="{StaticResource SectionTitleTextStyle}"
+                           Foreground="{StaticResource AccentBrush}" />
+
+                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Payment Amount *"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <TextBox x:Name="PaymentAmountTextBox"
+                                     PlaceholderText="0.00"
+                                     Text="0"
+                                     InputScope="Number"
+                                     Style="{StaticResource ModernTextBoxStyle}" />
+                            <TextBlock Text="Amount actually paid (must be greater than 0)"
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       FontSize="11" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Payment Mode *"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <ComboBox x:Name="PaymentModeComboBox"
+                                      ItemsSource="{x:Bind PaymentModes, Mode=OneWay}"
+                                      DisplayMemberPath="Name"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="Select payment mode"
+                                      Style="{StaticResource ModernComboBoxStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Payment Date *"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <CalendarDatePicker x:Name="PaymentDatePicker"
+                                                PlaceholderText="Select payment date"
+                                                HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="Project *"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <ComboBox x:Name="ProjectComboBox"
-                          ItemsSource="{x:Bind Projects, Mode=OneWay}"
-                          DisplayMemberPath="Name"
-                          HorizontalAlignment="Stretch"
-                          Style="{StaticResource ModernComboBoxStyle}" />
+            <!-- Section 4: Project & Subscription -->
+            <StackPanel Spacing="16">
+                <TextBlock Text="Project &amp; Categorization"
+                           Style="{StaticResource SectionTitleTextStyle}"
+                           Foreground="{StaticResource AccentBrush}" />
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Project *"
+                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <ComboBox x:Name="ProjectComboBox"
+                              ItemsSource="{x:Bind Projects, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Select project"
+                              Style="{StaticResource ModernComboBoxStyle}" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Subscription/Vendor (Optional)"
+                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <ComboBox x:Name="SubscriptionComboBox"
+                              ItemsSource="{x:Bind Subscriptions, Mode=OneWay}"
+                              DisplayMemberPath="Name"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="Select subscription or vendor (optional)"
+                              Style="{StaticResource ModernComboBoxStyle}"
+                              SelectionChanged="SubscriptionComboBox_SelectionChanged" />
+                    <TextBlock x:Name="SubscriptionValidationText"
+                               Text="?? Subscription/Vendor type must match Expense Type"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{StaticResource WarningBrush}"
+                               FontSize="11"
+                               Visibility="Collapsed"
+                               TextWrapping="Wrap" />
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Spacing="4">
-                <TextBlock Text="Payment Mode *"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <ComboBox x:Name="PaymentModeComboBox"
-                          ItemsSource="{x:Bind PaymentModes, Mode=OneWay}"
-                          DisplayMemberPath="Name"
-                          HorizontalAlignment="Stretch"
-                          Style="{StaticResource ModernComboBoxStyle}" />
-            </StackPanel>
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Subscription"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <ComboBox x:Name="SubscriptionComboBox"
-                          ItemsSource="{x:Bind Subscriptions, Mode=OneWay}"
-                          DisplayMemberPath="Name"
-                          HorizontalAlignment="Stretch"
-                          Style="{StaticResource ModernComboBoxStyle}" />
-            </StackPanel>
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Description"
-                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <TextBox x:Name="DescriptionTextBox"
-                         PlaceholderText="Enter description"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"
-                         MinHeight="80"
-                         Style="{StaticResource ModernTextBoxStyle}" />
-            </StackPanel>
-
-            <TextBlock Text="* Required fields"
-                       Style="{StaticResource CaptionTextBlockStyle}"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <!-- Required Fields Note -->
+            <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                    CornerRadius="8"
+                    Padding="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE946;"
+                              FontSize="14"
+                              Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="* Required fields | All payment details are mandatory"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </ContentDialog>

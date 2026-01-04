@@ -21,6 +21,9 @@
             <converters:InitialsConverter x:Key="InitialsConverter"/>
             <converters:BoolToDefaultLabelConverter x:Key="BoolToDefaultLabelConverter"/>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:StringFormatConverter x:Key="StringFormatConverter"/>
+            <converters:DateFormatConverter x:Key="DateFormatConverter"/>
+            <converters:CurrencyAmountConverter x:Key="CurrencyAmountConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

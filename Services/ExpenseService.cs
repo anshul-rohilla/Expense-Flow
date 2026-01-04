@@ -24,16 +24,25 @@ public class ExpenseService : IExpenseService
 {
     private readonly IRepository<Expense> _expenseRepository;
     private readonly IRepository<Project> _projectRepository;
+    private readonly IRepository<Subscription> _subscriptionRepository;
+    private readonly IRepository<ExpenseType> _expenseTypeRepository;
     private readonly IUserService _userService;
+    private readonly IFileStorageService _fileStorageService;
 
     public ExpenseService(
         IRepository<Expense> expenseRepository,
         IRepository<Project> projectRepository,
-        IUserService userService)
+        IRepository<Subscription> subscriptionRepository,
+        IRepository<ExpenseType> expenseTypeRepository,
+        IUserService userService,
+        IFileStorageService fileStorageService)
     {
         _expenseRepository = expenseRepository;
         _projectRepository = projectRepository;
+        _subscriptionRepository = subscriptionRepository;
+        _expenseTypeRepository = expenseTypeRepository;
         _userService = userService;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<ServiceResult<IEnumerable<Expense>>> GetAllExpensesAsync()
@@ -150,19 +159,24 @@ public class ExpenseService : IExpenseService
                 return ServiceResult<Expense>.FailureResult(validationErrors);
             }
 
+            // Update all properties
             existingExpense.ProjectId = expense.ProjectId;
             existingExpense.Name = expense.Name;
             existingExpense.Description = expense.Description;
-            existingExpense.Type = expense.Type;
+            existingExpense.ExpenseTypeId = expense.ExpenseTypeId;
+            existingExpense.Amount = expense.Amount;
+            existingExpense.Currency = expense.Currency;
+            existingExpense.HasInvoice = expense.HasInvoice;
             existingExpense.InvoiceNumber = expense.InvoiceNumber;
             existingExpense.InvoiceDate = expense.InvoiceDate;
-            existingExpense.InvoiceAmount = expense.InvoiceAmount;
-            existingExpense.BillingPeriod = expense.BillingPeriod;
-            existingExpense.InvoiceCurrency = expense.InvoiceCurrency;
+            existingExpense.BillingPeriodStart = expense.BillingPeriodStart;
+            existingExpense.BillingPeriodEnd = expense.BillingPeriodEnd;
+            existingExpense.InvoiceFileGuid = expense.InvoiceFileGuid;
+            existingExpense.InvoiceFileName = expense.InvoiceFileName;
+            existingExpense.PaymentAmount = expense.PaymentAmount;
             existingExpense.PaymentModeId = expense.PaymentModeId;
             existingExpense.PaymentCurrency = expense.PaymentCurrency;
             existingExpense.PaymentDate = expense.PaymentDate;
-            existingExpense.PaymentAmount = expense.PaymentAmount;
             existingExpense.SubscriptionId = expense.SubscriptionId;
             existingExpense.ModifiedAt = DateTime.Now;
             existingExpense.ModifiedBy = _userService.GetCurrentUsername();
@@ -184,6 +198,12 @@ public class ExpenseService : IExpenseService
             if (expense == null)
             {
                 return ServiceResult<bool>.FailureResult("Expense not found.");
+            }
+
+            // Delete invoice file if exists
+            if (expense.InvoiceFileGuid.HasValue)
+            {
+                await _fileStorageService.DeleteInvoiceFileAsync(expense.InvoiceFileGuid.Value);
             }
 
             await _expenseRepository.DeleteAsync(expense);
@@ -223,7 +243,7 @@ public class ExpenseService : IExpenseService
                     (!e.InvoiceDate.HasValue && e.CreatedAt <= endDate.Value));
             }
 
-            var total = expenses.Sum(e => e.InvoiceAmount);
+            var total = expenses.Sum(e => e.Amount);
             return ServiceResult<decimal>.SuccessResult(total);
         }
         catch (Exception ex)
@@ -236,36 +256,100 @@ public class ExpenseService : IExpenseService
     {
         var errors = new List<string>();
 
+        // Basic validations
         errors.AddRange(ValidationHelper.ValidateRequired(expense.Name, "Name"));
         errors.AddRange(ValidationHelper.ValidateMaxLength(expense.Name, 300, "Name"));
         errors.AddRange(ValidationHelper.ValidateMaxLength(expense.Description, 2000, "Description"));
-        errors.AddRange(ValidationHelper.ValidateMaxLength(expense.Type, 100, "Type"));
-        errors.AddRange(ValidationHelper.ValidateMaxLength(expense.InvoiceNumber, 100, "Invoice Number"));
-        errors.AddRange(ValidationHelper.ValidateMaxLength(expense.BillingPeriod, 100, "Billing Period"));
-        errors.AddRange(ValidationHelper.ValidateMaxLength(expense.InvoiceCurrency, 10, "Invoice Currency"));
+        errors.AddRange(ValidationHelper.ValidateMaxLength(expense.Currency, 10, "Currency"));
         errors.AddRange(ValidationHelper.ValidateMaxLength(expense.PaymentCurrency, 10, "Payment Currency"));
 
-        if (expense.InvoiceAmount < 0)
+        // Amount validation
+        if (expense.Amount < 0)
         {
-            errors.Add("Invoice Amount must be a positive value.");
+            errors.Add("Amount must be zero or positive.");
         }
 
-        errors.AddRange(ValidationHelper.ValidatePositive(expense.PaymentAmount, "Payment Amount"));
+        // Payment validations (mandatory)
+        if (expense.PaymentAmount <= 0)
+        {
+            errors.Add("Payment Amount is required and must be greater than zero.");
+        }
 
+        if (expense.PaymentModeId <= 0)
+        {
+            errors.Add("Payment Mode is required.");
+        }
+
+        // ExpenseType validation (mandatory)
+        if (expense.ExpenseTypeId <= 0)
+        {
+            errors.Add("Expense Type is required.");
+        }
+        else
+        {
+            var expenseTypeExists = await _expenseTypeRepository.ExistsAsync(et => et.Id == expense.ExpenseTypeId);
+            if (!expenseTypeExists)
+            {
+                errors.Add("Invalid Expense Type.");
+            }
+        }
+
+        // Invoice validations (if HasInvoice is true)
+        if (expense.HasInvoice)
+        {
+            if (string.IsNullOrWhiteSpace(expense.InvoiceNumber))
+            {
+                errors.Add("Invoice Number is required when invoice details are provided.");
+            }
+
+            if (!expense.InvoiceDate.HasValue)
+            {
+                errors.Add("Invoice Date is required when invoice details are provided.");
+            }
+        }
+
+        // Billing period validation
+        if (expense.BillingPeriodStart.HasValue && expense.BillingPeriodEnd.HasValue)
+        {
+            if (expense.BillingPeriodStart.Value > expense.BillingPeriodEnd.Value)
+            {
+                errors.Add("Billing Period Start Date cannot be after End Date.");
+            }
+        }
+
+        // Date validations
         if (expense.InvoiceDate.HasValue && expense.InvoiceDate.Value > DateTime.Now)
         {
             errors.Add("Invoice Date cannot be in the future.");
         }
 
-        if (expense.PaymentDate.HasValue && expense.PaymentDate.Value > DateTime.Now)
+        if (expense.PaymentDate > DateTime.Now)
         {
             errors.Add("Payment Date cannot be in the future.");
         }
 
+        // Project validation
         var projectExists = await _projectRepository.ExistsAsync(p => p.Id == expense.ProjectId);
         if (!projectExists)
         {
-            errors.Add("Invalid Project ID. Project does not exist.");
+            errors.Add("Invalid Project. Project does not exist.");
+        }
+
+        // Subscription/Vendor type validation
+        if (expense.SubscriptionId.HasValue && expense.SubscriptionId.Value > 0)
+        {
+            var subscription = await _subscriptionRepository.GetByIdAsync(expense.SubscriptionId.Value);
+            if (subscription != null && expense.ExpenseTypeId > 0)
+            {
+                var expenseType = await _expenseTypeRepository.GetByIdAsync(expense.ExpenseTypeId);
+                if (expenseType != null && !string.IsNullOrEmpty(subscription.Type))
+                {
+                    if (subscription.Type != expenseType.Name)
+                    {
+                        errors.Add($"Subscription/Vendor type '{subscription.Type}' does not match Expense Type '{expenseType.Name}'.");
+                    }
+                }
+            }
         }
 
         return errors;

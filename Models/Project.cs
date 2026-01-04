@@ -42,7 +42,7 @@ public class Project
     public decimal AnnualBudget => (MonthlyBudget ?? 0) * 12;
 
     [NotMapped]
-    public decimal TotalExpenses => Expenses?.Sum(e => e.InvoiceAmount) ?? 0;
+    public decimal TotalExpenses => Expenses?.Sum(e => e.Amount) ?? 0;
 
     [NotMapped]
     public decimal CurrentMonthExpenses
@@ -54,7 +54,7 @@ public class Project
                 .Where(e => e.InvoiceDate.HasValue && 
                            e.InvoiceDate.Value.Year == now.Year && 
                            e.InvoiceDate.Value.Month == now.Month)
-                .Sum(e => e.InvoiceAmount) ?? 0;
+                .Sum(e => e.Amount) ?? 0;
         }
     }
 
@@ -68,7 +68,7 @@ public class Project
                 .Where(e => e.InvoiceDate.HasValue && 
                            e.InvoiceDate.Value.Year == lastMonth.Year && 
                            e.InvoiceDate.Value.Month == lastMonth.Month)
-                .Sum(e => e.InvoiceAmount) ?? 0;
+                .Sum(e => e.Amount) ?? 0;
         }
     }
 
@@ -80,7 +80,7 @@ public class Project
             var now = DateTime.Now;
             return Expenses?
                 .Where(e => e.InvoiceDate.HasValue && e.InvoiceDate.Value.Year == now.Year)
-                .Sum(e => e.InvoiceAmount) ?? 0;
+                .Sum(e => e.Amount) ?? 0;
         }
     }
 
@@ -108,5 +108,24 @@ public class Project
             if (AnnualBudget == 0) return 0;
             return (double)(CurrentYearExpenses / AnnualBudget) * 100;
         }
+    }
+
+    // Date range filtering methods
+    public decimal GetExpensesForDateRange(DateTime startDate, DateTime endDate)
+    {
+        return Expenses?
+            .Where(e => e.InvoiceDate.HasValue &&
+                       e.InvoiceDate.Value >= startDate &&
+                       e.InvoiceDate.Value <= endDate)
+            .Sum(e => e.Amount) ?? 0;
+    }
+
+    public IEnumerable<Expense> GetExpensesByDateRange(DateTime startDate, DateTime endDate)
+    {
+        return Expenses?
+            .Where(e => e.InvoiceDate.HasValue &&
+                       e.InvoiceDate.Value >= startDate &&
+                       e.InvoiceDate.Value <= endDate)
+            .OrderByDescending(e => e.InvoiceDate) ?? Enumerable.Empty<Expense>();
     }
 }

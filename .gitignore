@@ -482,3 +482,11 @@ Desktop.ini
 
 # PowerShell scripts for database recreation (uncomment if you don't want to track)
 # *.ps1
+
+# Ignore all Markdown files
+*.md
+
+# But keep README.md
+!README.md
+
+*.ps1

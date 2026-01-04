@@ -223,7 +223,7 @@
                                         <ThemeShadow />
                                     </Border.Shadow>
                                     
-                                    <Grid Padding="24,20,24,20" RowSpacing="12">
+                                    <Grid Padding="24,18,24,18" RowSpacing="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -232,7 +232,7 @@
                                         </Grid.RowDefinitions>
 
                                         <!-- Card Header: Chip & Contactless Icon -->
-                                        <Grid Grid.Row="0" Height="40">
+                                        <Grid Grid.Row="0" Height="36">
                                             <!-- EMV Chip (visible for all types) -->
                                             <Border Width="48" Height="36"
                                                     CornerRadius="6"
@@ -269,7 +269,7 @@
                                         </Grid>
 
                                         <!-- Card/UPI Number or Balance -->
-                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="0" Margin="0,8,0,8">
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="0" Margin="0,4,0,4">
                                             <TextBlock x:Name="CurrencyPrefix"
                                                      Text="{x:Bind Type, Converter={StaticResource PaymentModeTypeToCurrencyConverter}}"
                                                      VerticalAlignment="Center"
@@ -286,13 +286,13 @@
                                         </StackPanel>
 
                                         <!-- Holder Name & Valid Thru -->
-                                        <Grid Grid.Row="2" ColumnSpacing="20" Margin="0,0,0,4">
+                                        <Grid Grid.Row="2" ColumnSpacing="20" Margin="0,0,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <StackPanel Grid.Column="0" Spacing="4">
+                                            <StackPanel Grid.Column="0" Spacing="2">
                                                 <TextBlock Text="{x:Bind HolderLabel}"
                                                            Foreground="White"
                                                            Opacity="0.7"
@@ -311,10 +311,10 @@
                                                            FontWeight="Normal"
                                                            TextTrimming="CharacterEllipsis"
                                                            MaxLines="1"
-                                                           Margin="0,2,0,0"/>
+                                                           Margin="0,1,0,0"/>
                                             </StackPanel>
 
-                                            <StackPanel Grid.Column="1" Spacing="4">
+                                            <StackPanel Grid.Column="1" Spacing="2">
                                                 <TextBlock Text="VALID THRU"
                                                            Foreground="White"
                                                            Opacity="0.7"
@@ -329,7 +329,7 @@
                                         </Grid>
 
                                         <!-- Brand & Actions -->
-                                        <Grid Grid.Row="3">
+                                        <Grid Grid.Row="3" Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>

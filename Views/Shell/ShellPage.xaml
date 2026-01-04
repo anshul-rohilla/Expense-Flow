@@ -268,8 +268,8 @@
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
 
-                <!-- Subscriptions -->
-                <NavigationViewItem Tag="Subscriptions" ToolTipService.ToolTip="Subscriptions">
+                <!-- Subscriptions and Vendors -->
+                <NavigationViewItem Tag="Subscriptions" ToolTipService.ToolTip="Subscriptions &amp; Vendors">
                     <NavigationViewItem.Content>
                         <StackPanel HorizontalAlignment="Center" 
                                   Spacing="4"

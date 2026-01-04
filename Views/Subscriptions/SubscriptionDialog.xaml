@@ -18,20 +18,35 @@
                    Visibility="Collapsed" />
 
         <StackPanel Spacing="4">
+            <TextBlock Text="Type *"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <RadioButton x:Name="SubscriptionRadioButton"
+                             Content="Subscription"
+                             IsChecked="True"
+                             GroupName="EntityType"/>
+                <RadioButton x:Name="VendorRadioButton"
+                             Content="Vendor"
+                             GroupName="EntityType"/>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
             <TextBlock Text="Name *"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
             <TextBox x:Name="NameTextBox"
-                     PlaceholderText="Enter subscription name"
+                     PlaceholderText="Enter subscription/vendor name (e.g., Netflix, Amazon, Supplier Ltd)"
                      Style="{StaticResource ModernTextBoxStyle}" />
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Type *"
+            <TextBlock Text="Category *"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
             <ComboBox x:Name="TypeComboBox"
                       ItemsSource="{x:Bind ExpenseTypes, Mode=OneWay}"
                       DisplayMemberPath="Name"
                       HorizontalAlignment="Stretch"
+                      PlaceholderText="Select category (e.g., OTT &amp; Streaming, IT &amp; Software, Shopping)"
                       Style="{StaticResource ModernComboBoxStyle}"/>
         </StackPanel>
 
@@ -39,7 +54,7 @@
             <TextBlock Text="Reference"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
             <TextBox x:Name="ReferenceTextBox"
-                     PlaceholderText="Enter reference (optional - e.g., account ID, email)"
+                     PlaceholderText="Account ID, email, or vendor code (optional)"
                      Style="{StaticResource ModernTextBoxStyle}" />
         </StackPanel>
 

@@ -133,4 +133,45 @@ public sealed partial class ProjectsPage : Page
         }
         return null;
     }
+
+    private async void AddProjectGroup_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        var dialog = new ProjectGroupDialog
+        {
+            XamlRoot = this.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+        
+        if (result == ContentDialogResult.Primary && dialog.ProjectGroup != null)
+        {
+            var projectGroupService = App.Host!.Services.GetRequiredService<Services.IProjectGroupService>();
+            var createResult = await projectGroupService.CreateProjectGroupAsync(dialog.ProjectGroup);
+
+            if (createResult.Success)
+            {
+                await ViewModel.LoadProjectGroupsCommand.ExecuteAsync(null);
+                
+                var successDialog = new ContentDialog
+                {
+                    Title = "Success",
+                    Content = "Project group created successfully!",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await successDialog.ShowAsync();
+            }
+            else
+            {
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Error",
+                    Content = createResult.GetErrorMessage(),
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await errorDialog.ShowAsync();
+            }
+        }
+    }
 }

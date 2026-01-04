@@ -26,6 +26,7 @@ public partial class ReportsViewModel : ViewModelBase
     private readonly IProjectGroupService _projectGroupService;
     private readonly IPaymentModeService _paymentModeService;
     private readonly IContactService _contactService;
+    private readonly ISettingsService _settingsService;
 
     [ObservableProperty]
     private ReportType _selectedReportType = ReportType.Overall;
@@ -40,10 +41,16 @@ public partial class ReportsViewModel : ViewModelBase
     private ObservableCollection<object> _reportData = new();
 
     [ObservableProperty]
+    private string _totalAmountFormatted = string.Empty;
+
+    [ObservableProperty]
     private decimal _totalAmount;
 
     [ObservableProperty]
     private int _transactionCount;
+
+    [ObservableProperty]
+    private string _averageAmountFormatted = string.Empty;
 
     [ObservableProperty]
     private decimal _averageAmount;
@@ -53,17 +60,23 @@ public partial class ReportsViewModel : ViewModelBase
         IProjectService projectService,
         IProjectGroupService projectGroupService,
         IPaymentModeService paymentModeService,
-        IContactService contactService)
+        IContactService contactService,
+        ISettingsService settingsService)
     {
         _expenseService = expenseService;
         _projectService = projectService;
         _projectGroupService = projectGroupService;
         _paymentModeService = paymentModeService;
         _contactService = contactService;
+        _settingsService = settingsService;
 
         // Set default date range to this month
         StartDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         EndDate = DateTime.Now;
+        
+        // Initialize formatted values
+        TotalAmountFormatted = _settingsService.FormatCurrency(0);
+        AverageAmountFormatted = _settingsService.FormatCurrency(0);
     }
 
     [RelayCommand]
@@ -103,7 +116,7 @@ public partial class ReportsViewModel : ViewModelBase
                 {
                     ProjectId = g.Key,
                     ProjectName = g.First().Project?.Name ?? "Unknown",
-                    TotalAmount = g.Sum(e => e.InvoiceAmount),
+                    TotalAmount = g.Sum(e => e.Amount),
                     Count = g.Count()
                 })
                 .OrderByDescending(x => x.TotalAmount);
@@ -129,13 +142,12 @@ public partial class ReportsViewModel : ViewModelBase
         if (expensesResult.Success && expensesResult.Data != null)
         {
             var groupedData = expensesResult.Data
-                .Where(e => e.PaymentModeId.HasValue)
                 .GroupBy(e => e.PaymentModeId)
                 .Select(g => new
                 {
                     PaymentModeId = g.Key,
                     PaymentModeName = g.First().PaymentMode?.Name ?? "Unknown",
-                    TotalAmount = g.Sum(e => e.InvoiceAmount),
+                    TotalAmount = g.Sum(e => e.Amount),
                     Count = g.Count()
                 })
                 .OrderByDescending(x => x.TotalAmount);
@@ -162,9 +174,9 @@ public partial class ReportsViewModel : ViewModelBase
         {
             var summaryData = new[]
             {
-                new { Category = "Total Expenses", Value = expensesResult.Data.Sum(e => e.InvoiceAmount) },
+                new { Category = "Total Expenses", Value = expensesResult.Data.Sum(e => e.Amount) },
                 new { Category = "Transaction Count", Value = (decimal)expensesResult.Data.Count() },
-                new { Category = "Average Amount", Value = expensesResult.Data.Any() ? expensesResult.Data.Average(e => e.InvoiceAmount) : 0 }
+                new { Category = "Average Amount", Value = expensesResult.Data.Any() ? expensesResult.Data.Average(e => e.Amount) : 0 }
             };
 
             ReportData = new ObservableCollection<object>(summaryData);
@@ -174,9 +186,13 @@ public partial class ReportsViewModel : ViewModelBase
 
     private void CalculateSummary(IEnumerable<Expense> expenses)
     {
-        TotalAmount = expenses.Sum(e => e.InvoiceAmount);
+        TotalAmount = expenses.Sum(e => e.Amount);
         TransactionCount = expenses.Count();
         AverageAmount = TransactionCount > 0 ? TotalAmount / TransactionCount : 0;
+        
+        // Format currency using settings
+        TotalAmountFormatted = _settingsService.FormatCurrency(TotalAmount);
+        AverageAmountFormatted = _settingsService.FormatCurrency(AverageAmount);
     }
 
     [RelayCommand]

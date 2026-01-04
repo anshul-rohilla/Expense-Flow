@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:models="using:Expense_Flow.Models"
+      xmlns:controls="using:Expense_Flow.Controls"
       mc:Ignorable="d">
 
     <Grid x:Name="RootGrid">
@@ -203,42 +204,9 @@
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="models:Expense">
-                                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                          CornerRadius="8"
-                                          Padding="16">
-                                        <Grid ColumnSpacing="12">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <Border Grid.Column="0"
-                                                  Background="{StaticResource AccentBrush}"
-                                                  Width="48" Height="48"
-                                                  CornerRadius="12">
-                                                <FontIcon Glyph="&#xE8C7;" 
-                                                        Foreground="White"
-                                                        FontSize="20"/>
-                                            </Border>
-
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                                                <TextBlock Text="{x:Bind Name}"
-                                                         Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
-                                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                                    <Run Text="{x:Bind InvoiceDate}"/>
-                                                    <Run Text=" • "/>
-                                                    <Run Text="{x:Bind Type}"/>
-                                                </TextBlock>
-                                            </StackPanel>
-
-                                            <TextBlock Grid.Column="2"
-                                                     Text="{x:Bind InvoiceAmount}"
-                                                     Style="{StaticResource CardTitleTextStyle}"
-                                                     VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
+                                    <controls:ExpenseCard Expense="{x:Bind}"
+                                                            IsCompact="False"
+                                                            Click="ExpenseCard_Click"/>
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>

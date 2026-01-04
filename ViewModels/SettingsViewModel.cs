@@ -1,10 +1,12 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 using Expense_Flow.Models;
 using Expense_Flow.Services;
 
@@ -37,6 +39,9 @@ public partial class SettingsViewModel : ViewModelBase
     private string _appVersion = "1.0.0";
 
     [ObservableProperty]
+    private string _currentUsername = string.Empty;
+
+    [ObservableProperty]
     private ObservableCollection<ExpenseType> _expenseTypes = new();
 
     public SettingsViewModel(IExpenseTypeService expenseTypeService, ISettingsService settingsService)
@@ -54,6 +59,21 @@ public partial class SettingsViewModel : ViewModelBase
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "ExpenseFlow",
             "expenseflow.db");
+
+        // Get app version from package
+        try
+        {
+            var package = Windows.ApplicationModel.Package.Current;
+            var version = package.Id.Version;
+            AppVersion = $"{version.Major}.{version.Minor}.{version.Build}";
+        }
+        catch
+        {
+            AppVersion = "1.0.0";
+        }
+
+        // Get current Windows username
+        CurrentUsername = Environment.UserName;
 
         SelectedTheme = _settingsService.Theme;
         SelectedBackdrop = _settingsService.Backdrop;
@@ -148,9 +168,35 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteAsync(async () =>
         {
-            // Implement backup logic
-            await Task.Delay(1000); // Placeholder
-            // Show success message
+            try
+            {
+                var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+                savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+                savePicker.FileTypeChoices.Add("SQLite Database", new List<string>() { ".db" });
+                savePicker.SuggestedFileName = $"ExpenseFlow_Backup_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+                // Get window handle
+                var window = (Microsoft.UI.Xaml.Application.Current as App)?.Window;
+                if (window != null)
+                {
+                    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                    WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
+                }
+
+                var file = await savePicker.PickSaveFileAsync();
+                if (file != null)
+                {
+                    var sourceFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(DatabasePath);
+                    await sourceFile.CopyAndReplaceAsync(file);
+
+                    // Success - will be shown by base class
+                    System.Diagnostics.Debug.WriteLine($"[Settings] Database backed up to: {file.Path}");
+                }
+            }
+            catch (Exception ex)
+            {
+                SetError($"Backup failed: {ex.Message}");
+            }
         }, "Backing up data...");
     }
 
@@ -159,21 +205,72 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await ExecuteAsync(async () =>
         {
-            // Implement restore logic
-            await Task.Delay(1000); // Placeholder
-            // Show success message
+            try
+            {
+                var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+                openPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+                openPicker.FileTypeFilter.Add(".db");
+
+                // Get window handle
+                var window = (Microsoft.UI.Xaml.Application.Current as App)?.Window;
+                if (window != null)
+                {
+                    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                    WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hwnd);
+                }
+
+                var file = await openPicker.PickSingleFileAsync();
+                if (file != null)
+                {
+                    var destinationFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(DatabasePath);
+                    await file.CopyAndReplaceAsync(destinationFile);
+
+                    // Success - app should restart
+                    System.Diagnostics.Debug.WriteLine($"[Settings] Database restored from: {file.Path}");
+                }
+            }
+            catch (Exception ex)
+            {
+                SetError($"Restore failed: {ex.Message}");
+            }
         }, "Restoring data...");
     }
 
     [RelayCommand]
-    private async Task ExportDataAsync()
+    private async Task ClearAllDataAsync(string usernameConfirmation)
     {
         await ExecuteAsync(async () =>
         {
-            // Implement export logic
-            await Task.Delay(1000); // Placeholder
-            // Show success message
-        }, "Exporting data...");
+            if (string.IsNullOrWhiteSpace(usernameConfirmation))
+            {
+                SetError("Username confirmation is required.");
+                return;
+            }
+
+            if (!usernameConfirmation.Equals(CurrentUsername, StringComparison.OrdinalIgnoreCase))
+            {
+                SetError($"Username does not match. Please enter '{CurrentUsername}' to confirm.");
+                return;
+            }
+
+            try
+            {
+                // Close any open connections
+                var dbContext = App.Host!.Services.GetRequiredService<Data.ExpenseFlowDbContext>();
+                await dbContext.Database.EnsureDeletedAsync();
+                await dbContext.Database.EnsureCreatedAsync();
+
+                // Reinitialize database
+                var databaseService = App.Host!.Services.GetRequiredService<DatabaseService>();
+                await databaseService.InitializeAsync();
+
+                System.Diagnostics.Debug.WriteLine("[Settings] All data cleared successfully");
+            }
+            catch (Exception ex)
+            {
+                SetError($"Clear data failed: {ex.Message}");
+            }
+        }, "Clearing all data...");
     }
 
     private void SaveSettings()

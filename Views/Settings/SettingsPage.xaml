@@ -300,7 +300,8 @@
               <Button x:Name="BackupButton"
                     Grid.Column="0" Grid.Row="0"
                     Content="Backup Data"
-                    HorizontalAlignment="Stretch">
+                    HorizontalAlignment="Stretch"
+                    Command="{x:Bind ViewModel.BackupDataCommand}">
                 <Button.Resources>
                   <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource SuccessColor}"/>
                 </Button.Resources>
@@ -309,7 +310,8 @@
               <Button x:Name="RestoreButton"
                     Grid.Column="1" Grid.Row="0"
                     Content="Restore Data"
-                    HorizontalAlignment="Stretch">
+                    HorizontalAlignment="Stretch"
+                    Command="{x:Bind ViewModel.RestoreDataCommand}">
                 <Button.Resources>
                   <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource WarningColor}"/>
                 </Button.Resources>
@@ -317,7 +319,8 @@
             </Grid>
 
             <Button Content="Clear All Data"
-                  HorizontalAlignment="Stretch">
+                  HorizontalAlignment="Stretch"
+                  Click="ClearAllData_Click">
               <Button.Resources>
                 <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource ErrorColor}"/>
               </Button.Resources>
@@ -353,7 +356,7 @@
                         Spacing="4">
                 <TextBlock Text="Expense Flow"
                          Style="{StaticResource CardTitleTextStyle}"/>
-                <TextBlock Text="Version 1.0.0"
+                <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneWay}"
                          Style="{StaticResource CaptionTextBlockStyle}"
                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 <TextBlock Text="Modern expense tracking for Windows"

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Expense_Flow.Controls.ExpenseCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:Expense_Flow.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="120"
+             d:DesignWidth="400">
+
+    <Button x:Name="RootButton"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            Padding="0"
+            Background="Transparent"
+            BorderThickness="0"
+            Click="RootButton_Click">
+        <Button.Resources>
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="Transparent"/>
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="Transparent"/>
+        </Button.Resources>
+        
+        <Border x:Name="RootBorder"
+                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                CornerRadius="12"
+                Padding="16"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top Row: Main Info -->
+                <Grid Grid.Row="0" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Icon -->
+                    <Border Grid.Column="0"
+                            Background="{StaticResource AccentBrush}"
+                            Width="48" Height="48"
+                            CornerRadius="12">
+                        <TextBlock Text="{x:Bind Expense.ExpenseType.Emoji, Mode=OneWay, FallbackValue='💰'}" 
+                                 FontSize="24"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Name & Date/Type -->
+                    <StackPanel Grid.Column="1" 
+                                VerticalAlignment="Center"
+                                Spacing="4">
+                        <TextBlock Text="{x:Bind Expense.Name, Mode=OneWay}"
+                                 Style="{StaticResource BodyStrongTextBlockStyle}"
+                                 TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{x:Bind Expense.ExpenseType.Name, Mode=OneWay, FallbackValue='General'}"
+                                     Style="{StaticResource CaptionTextBlockStyle}"
+                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="•" 
+                                     Style="{StaticResource CaptionTextBlockStyle}"
+                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                            <TextBlock Text="{x:Bind Expense.PaymentDate, Mode=OneWay, Converter={StaticResource DateFormatConverter}, ConverterParameter='MMM dd, yyyy'}"
+                                     Style="{StaticResource CaptionTextBlockStyle}"
+                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Amount -->
+                    <StackPanel Grid.Column="2" 
+                              VerticalAlignment="Center"
+                              Spacing="2">
+                        <TextBlock Text="{x:Bind Expense.Amount, Mode=OneWay, Converter={StaticResource CurrencyAmountConverter}}"
+                                 Style="{StaticResource SubtitleTextBlockStyle}"
+                                 FontWeight="Bold"
+                                 Foreground="{StaticResource WarningBrush}"
+                                 HorizontalAlignment="Right"/>
+                        <Border Background="{StaticResource AccentBrush}"
+                                CornerRadius="4"
+                                Padding="8,3"
+                                HorizontalAlignment="Right">
+                            <TextBlock Text="View"
+                                     Style="{StaticResource CaptionTextBlockStyle}"
+                                     FontSize="10"
+                                     FontWeight="SemiBold"
+                                     Foreground="White"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Bottom Row: Details (Hidden in Compact Mode) -->
+                <Grid x:Name="DetailsRow" 
+                      Grid.Row="1" 
+                      ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Project -->
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="Project"
+                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                 FontSize="10"/>
+                        <TextBlock Text="{x:Bind Expense.Project.Name, Mode=OneWay, FallbackValue='General'}"
+                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                 FontWeight="SemiBold"
+                                 TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <!-- Payment Mode -->
+                    <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Text="Payment"
+                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                 FontSize="10"/>
+                        <TextBlock Text="{x:Bind Expense.PaymentMode.Name, Mode=OneWay, FallbackValue='Cash'}"
+                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                 FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <!-- File Indicator -->
+                    <Border Grid.Column="2"
+                            Background="{StaticResource SuccessBrush}"
+                            CornerRadius="6"
+                            Padding="8,4"
+                            VerticalAlignment="Center">
+                        <Border.Visibility>
+                            <Binding Path="Expense.HasInvoiceFile" Mode="OneWay">
+                                <Binding.Converter>
+                                    <StaticResource ResourceKey="BoolToVisibilityConverter"/>
+                                </Binding.Converter>
+                            </Binding>
+                        </Border.Visibility>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE723;" 
+                                    FontSize="12"
+                                    Foreground="White"/>
+                            <TextBlock Text="File"
+                                     Style="{StaticResource CaptionTextBlockStyle}"
+                                     FontSize="10"
+                                     Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Button>
+</UserControl>

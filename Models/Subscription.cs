@@ -22,6 +22,9 @@ public class Subscription
     public int? ContactId { get; set; }
     public Contact? Contact { get; set; }
 
+    // Flag to distinguish vendors from subscriptions
+    public bool IsVendor { get; set; } = false;
+
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public string? CreatedBy { get; set; }

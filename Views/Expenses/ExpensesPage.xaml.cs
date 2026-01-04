@@ -56,6 +56,14 @@ public sealed partial class ExpensesPage : Page
         }
     }
 
+    private void ExpenseCard_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (sender is Controls.ExpenseCard card && card.Expense != null)
+        {
+            Frame.Navigate(typeof(ExpenseDetailsPage), card.Expense.Id);
+        }
+    }
+
     private async void EditExpense_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         if (sender is Button button && button.Tag is Expense expense)
@@ -98,7 +106,7 @@ public sealed partial class ExpensesPage : Page
             var confirmDialog = new ContentDialog
             {
                 Title = "Delete Expense",
-                Content = $"Are you sure you want to delete expense '{expense.InvoiceNumber}'? This action cannot be undone.",
+                Content = $"Are you sure you want to delete expense '{expense.Name}'? This action cannot be undone.",
                 PrimaryButtonText = "Delete",
                 SecondaryButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Secondary,

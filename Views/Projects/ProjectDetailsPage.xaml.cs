@@ -60,7 +60,7 @@ public sealed partial class ProjectDetailsPage : Page
         if (expensesResult.Success && expensesResult.Data != null)
         {
             var expenses = expensesResult.Data.ToList();
-            totalSpent = expenses.Sum(e => e.InvoiceAmount);
+            totalSpent = expenses.Sum(e => e.Amount);
             
             // Load expenses list
             ExpensesRepeater.ItemsSource = expenses;
@@ -117,8 +117,7 @@ public sealed partial class ProjectDetailsPage : Page
     {
         if (_project == null) return;
 
-        var expense = new Expense { ProjectId = _project.Id };
-        var dialog = new Expenses.ExpenseDialog(expense)
+        var dialog = new Expenses.ExpenseDialog()
         {
             XamlRoot = this.XamlRoot
         };
@@ -127,10 +126,104 @@ public sealed partial class ProjectDetailsPage : Page
         
         if (result == ContentDialogResult.Primary && dialog.Expense != null)
         {
+            // Set the ProjectId after dialog closes
+            dialog.Expense.ProjectId = _project.Id;
+            
             var createResult = await _expenseService.CreateExpenseAsync(dialog.Expense);
             if (createResult.Success)
             {
                 LoadProjectDetails();
+            }
+            else
+            {
+                // Show error dialog
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Error Creating Expense",
+                    Content = createResult.GetErrorMessage(),
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await errorDialog.ShowAsync();
+            }
+        }
+    }
+
+    private void ExpenseCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Controls.ExpenseCard card && card.Expense != null)
+        {
+            Frame.Navigate(typeof(Expenses.ExpenseDetailsPage), card.Expense.Id);
+        }
+    }
+
+    private async void EditExpense_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Expense expense)
+        {
+            var dialog = new Expenses.ExpenseDialog(expense)
+            {
+                XamlRoot = this.XamlRoot
+            };
+
+            var result = await dialog.ShowAsync();
+            
+            if (result == ContentDialogResult.Primary && dialog.Expense != null)
+            {
+                var updateResult = await _expenseService.UpdateExpenseAsync(dialog.Expense);
+                if (updateResult.Success)
+                {
+                    LoadProjectDetails();
+                }
+                else
+                {
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Error Updating Expense",
+                        Content = updateResult.GetErrorMessage(),
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
+            }
+        }
+    }
+
+    private async void DeleteExpense_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Expense expense)
+        {
+            var confirmDialog = new ContentDialog
+            {
+                Title = "Delete Expense",
+                Content = $"Are you sure you want to delete expense '{expense.Name}'? This action cannot be undone.",
+                PrimaryButtonText = "Delete",
+                SecondaryButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Secondary,
+                XamlRoot = this.XamlRoot
+            };
+
+            var result = await confirmDialog.ShowAsync();
+            
+            if (result == ContentDialogResult.Primary)
+            {
+                var deleteResult = await _expenseService.DeleteExpenseAsync(expense.Id);
+                if (deleteResult.Success)
+                {
+                    LoadProjectDetails();
+                }
+                else
+                {
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Error Deleting Expense",
+                        Content = deleteResult.GetErrorMessage(),
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
             }
         }
     }

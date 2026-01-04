@@ -5,6 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Expense_Flow.Models"
+    xmlns:controls="using:Expense_Flow.Controls"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -116,14 +118,23 @@
                                 Orientation="Horizontal" 
                                 Spacing="12"
                                 VerticalAlignment="Center">
+                        <ComboBox x:Name="DateRangeComboBox"
+                                  PlaceholderText="Select period"
+                                  MinWidth="180"
+                                  SelectedIndex="2"
+                                  SelectionChanged="DateRangeComboBox_SelectionChanged"
+                                  Style="{StaticResource ModernComboBoxStyle}">
+                            <ComboBoxItem Content="Current Month" Tag="CurrentMonth"/>
+                            <ComboBoxItem Content="Previous Month" Tag="PreviousMonth"/>
+                            <ComboBoxItem Content="Last 30 Days" Tag="Last30Days"/>
+                            <ComboBoxItem Content="Last 2 Months" Tag="Last2Months"/>
+                            <ComboBoxItem Content="Last 3 Months" Tag="Last3Months"/>
+                            <ComboBoxItem Content="Last 1 Year" Tag="Last1Year"/>
+                        </ComboBox>
                         <Button Style="{StaticResource IconButtonStyle}"
                                 ToolTipService.ToolTip="Refresh"
                                 Click="RefreshButton_Click">
                             <FontIcon Glyph="&#xE72C;" FontSize="16"/>
-                        </Button>
-                        <Button Style="{StaticResource IconButtonStyle}"
-                                ToolTipService.ToolTip="Filter">
-                            <FontIcon Glyph="&#xE71C;" FontSize="16"/>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -185,7 +196,7 @@
                                 <FontIcon Glyph="&#xE74A;" 
                                         FontSize="12" 
                                         Foreground="#90FFFFFF"/>
-                                <TextBlock Text="+12.5% from last month" 
+                                <TextBlock Text="{x:Bind ViewModel.TotalExpensesChange, Mode=OneWay}" 
                                         Foreground="#90FFFFFF"
                                         FontSize="11"/>
                             </StackPanel>
@@ -232,7 +243,7 @@
                                 <FontIcon Glyph="&#xE73E;" 
                                         FontSize="12" 
                                         Foreground="#90FFFFFF"/>
-                                <TextBlock Text="2 new this week" 
+                                <TextBlock Text="{x:Bind ViewModel.NewProjectsThisWeek, Mode=OneWay}" 
                                         Foreground="#90FFFFFF"
                                         FontSize="11"/>
                             </StackPanel>
@@ -253,7 +264,7 @@
                             </Grid.RowDefinitions>
 
                             <Grid Grid.Row="0">
-                                <TextBlock Text="This Month" 
+                                <TextBlock Text="{x:Bind ViewModel.SelectedPeriodLabel, Mode=OneWay}" 
                                         Foreground="White"
                                         Style="{StaticResource StatLabelTextStyle}"
                                         Opacity="0.9"/>
@@ -279,7 +290,7 @@
                                 <FontIcon Glyph="&#xE738;" 
                                         FontSize="12" 
                                         Foreground="#90FFFFFF"/>
-                                <TextBlock Text="15 transactions" 
+                                <TextBlock Text="{x:Bind ViewModel.ThisMonthTransactions, Mode=OneWay}" 
                                         Foreground="#90FFFFFF"
                                         FontSize="11"/>
                             </StackPanel>
@@ -318,11 +329,11 @@
                                         VerticalAlignment="Center"
                                         Spacing="8"
                                         Margin="0,16,0,16">
-                                <TextBlock Text="67%"
+                                <TextBlock Text="{x:Bind ViewModel.BudgetUsedPercentage, Mode=OneWay, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:F1}%'}"
                                         Foreground="White"
                                         FontSize="36"
                                         FontWeight="Bold"/>
-                                <ProgressBar Value="67" 
+                                <ProgressBar Value="{x:Bind ViewModel.BudgetUsedPercentage, Mode=OneWay}" 
                                             Maximum="100"
                                             Foreground="White"
                                             Background="#40FFFFFF"
@@ -333,7 +344,7 @@
                                 <FontIcon Glyph="&#xE7C3;" 
                                         FontSize="12" 
                                         Foreground="#90FFFFFF"/>
-                                <TextBlock Text="$3,300 remaining" 
+                                <TextBlock Text="{x:Bind ViewModel.BudgetRemaining, Mode=OneWay}" 
                                         Foreground="#90FFFFFF"
                                         FontSize="11"/>
                             </StackPanel>
@@ -375,59 +386,32 @@
                                         Click="ViewAllExpenses_Click"/>
                             </Grid>
 
-                            <ItemsRepeater Grid.Row="1" 
-                                    ItemsSource="{x:Bind ViewModel.RecentExpenses, Mode=OneWay}">
-                                <ItemsRepeater.Layout>
-                                    <StackLayout Spacing="12"/>
-                                </ItemsRepeater.Layout>
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                                CornerRadius="8"
-                                                Padding="16">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                            <!-- Expense List - Visible when there are expenses -->
+                            <ScrollViewer Grid.Row="1"
+                                        x:Name="ExpenseListScroller"
+                                        Visibility="Collapsed"
+                                        MaxHeight="400">
+                                <ItemsRepeater ItemsSource="{x:Bind ViewModel.RecentExpenses, Mode=OneWay}">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Spacing="8"/>
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Expense">
+                                            <controls:ExpenseCard Expense="{x:Bind}"
+                                                                IsCompact="True"
+                                                                Click="ExpenseCard_Click"/>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </ScrollViewer>
 
-                                                <Border Grid.Column="0"
-                                                        Background="{StaticResource AccentBrush}"
-                                                        Width="48" Height="48"
-                                                        CornerRadius="12"
-                                                        Margin="0,0,16,0">
-                                                    <FontIcon Glyph="&#xE8C7;" 
-                                                            Foreground="White"
-                                                            FontSize="20"/>
-                                                </Border>
-
-                                                <StackPanel Grid.Column="1" 
-                                                            VerticalAlignment="Center"
-                                                            Spacing="4">
-                                                    <TextBlock Text="Expense Name"
-                                                             Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                                    <TextBlock Text="Project • Today"
-                                                             Style="{StaticResource CaptionTextBlockStyle}"
-                                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                                </StackPanel>
-
-                                                <TextBlock Grid.Column="2"
-                                                         Text="$125.00"
-                                                         Style="{StaticResource StatValueTextStyle}"
-                                                         FontSize="20"
-                                                         VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                            </ItemsRepeater>
-
-                            <!-- Empty State -->
+                            <!-- Empty State - Visible when no expenses -->
                             <StackPanel Grid.Row="1"
+                                        x:Name="ExpenseEmptyState"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Spacing="16">
+                                        Spacing="16"
+                                        Visibility="Visible">
                                 <FontIcon Glyph="&#xE8C7;" 
                                         FontSize="64"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -436,7 +420,8 @@
                                          Style="{StaticResource SubtitleTextBlockStyle}"
                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <Button Content="Add Your First Expense"
-                                        Style="{StaticResource PrimaryButtonStyle}"/>
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Click="AddExpense_Click"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -543,7 +528,7 @@
                                     <StackLayout Spacing="8"/>
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate x:DataType="models:Project">
                                         <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
                                                 CornerRadius="8"
                                                 Padding="12">
@@ -565,7 +550,7 @@
 
                                                 <StackPanel Grid.Column="1" 
                                                             VerticalAlignment="Center">
-                                                    <TextBlock Text="Project Name"
+                                                    <TextBlock Text="{x:Bind Name}"
                                                              Style="{StaticResource CaptionTextBlockStyle}"
                                                              FontWeight="SemiBold"/>
                                                 </StackPanel>

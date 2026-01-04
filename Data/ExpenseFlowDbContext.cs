@@ -109,12 +109,17 @@ public class ExpenseFlowDbContext : DbContext
             entity.HasOne(e => e.PaymentMode)
                 .WithMany(pm => pm.Expenses)
                 .HasForeignKey(e => e.PaymentModeId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Subscription)
                 .WithMany(s => s.Expenses)
                 .HasForeignKey(e => e.SubscriptionId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.ExpenseType)
+                .WithMany()
+                .HasForeignKey(e => e.ExpenseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ExpenseType>(entity =>

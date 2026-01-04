@@ -57,16 +57,16 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Spacing="8">
-                <TextBlock Text="Subscriptions" 
+                <TextBlock Text="Subscriptions and Vendors" 
                          Style="{StaticResource PageTitleTextStyle}"/>
-                <TextBlock Text="Track where your payments originate from"
+                <TextBlock Text="Track recurring subscriptions and vendor relationships"
                          Style="{StaticResource BodyTextBlockStyle}"
                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                          TextWrapping="Wrap"/>
             </StackPanel>
 
             <Button Grid.Column="1"
-                  Content="Add Subscription" 
+                  Content="Add Subscription/Vendor" 
                   Style="{StaticResource PrimaryButtonStyle}"
                   VerticalAlignment="Center"
                   Click="AddSubscription_Click">
@@ -83,7 +83,7 @@
               Padding="16"
               Margin="0,0,0,24"
               Translation="0,0,8">
-            <TextBox PlaceholderText="Search Subscriptions..."
+            <TextBox PlaceholderText="Search subscriptions and vendors..."
                    Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                    BorderThickness="0"
                    Background="Transparent">
@@ -122,17 +122,17 @@
                           HorizontalAlignment="Center">
                         <FontIcon Glyph="&#xE910;" FontSize="40" Foreground="White"/>
                     </Border>
-                    <TextBlock Text="No Subscriptions yet"
+                    <TextBlock Text="No subscriptions or vendors yet"
                              Style="{StaticResource SectionTitleTextStyle}"
                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="Add Subscriptions to track where payments originate from"
+                    <TextBlock Text="Add subscriptions (like Netflix, Spotify) or vendors (like suppliers, service providers) to track payments"
                              Style="{StaticResource BodyTextBlockStyle}"
                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                              HorizontalAlignment="Center"
                              TextWrapping="Wrap"
                              TextAlignment="Center"
                              MaxWidth="400"/>
-                    <Button Content="Add Your First Subscription"
+                    <Button Content="Add Your First Subscription/Vendor"
                           Style="{StaticResource PrimaryButtonStyle}"
                           HorizontalAlignment="Center"
                           Click="AddSubscription_Click"/>

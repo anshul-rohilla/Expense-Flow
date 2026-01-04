@@ -4,6 +4,7 @@ using Expense_Flow.ViewModels;
 using Expense_Flow.Models;
 using Expense_Flow.Services;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using System;
 
 namespace Expense_Flow.Views.Settings;
@@ -232,6 +233,69 @@ public sealed partial class SettingsPage : Page
             if (result == ContentDialogResult.Primary)
             {
                 await ViewModel!.DeleteExpenseTypeCommand.ExecuteAsync(expenseType);
+            }
+        }
+    }
+
+    private async void ClearAllData_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel == null) return;
+
+        var inputDialog = new ContentDialog
+        {
+            Title = "?? Clear All Data - Confirmation Required",
+            PrimaryButtonText = "Clear All Data",
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary,
+            XamlRoot = this.XamlRoot
+        };
+
+        var stackPanel = new StackPanel { Spacing = 12 };
+        
+        stackPanel.Children.Add(new TextBlock
+        {
+            Text = "This will permanently delete ALL data including expenses, projects, contacts, and settings.",
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = new SolidColorBrush(Microsoft.UI.Colors.Red),
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
+        });
+
+        stackPanel.Children.Add(new TextBlock
+        {
+            Text = $"To confirm, please enter your Windows username: {ViewModel.CurrentUsername}",
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 8, 0, 0)
+        });
+
+        var usernameInput = new TextBox
+        {
+            PlaceholderText = "Enter username to confirm",
+            Margin = new Thickness(0, 8, 0, 0)
+        };
+        stackPanel.Children.Add(usernameInput);
+
+        inputDialog.Content = stackPanel;
+
+        var result = await inputDialog.ShowAsync();
+        
+        if (result == ContentDialogResult.Primary)
+        {
+            await ViewModel.ClearAllDataCommand.ExecuteAsync(usernameInput.Text);
+            
+            // If successful, show restart message
+            if (!ViewModel.HasErrors)
+            {
+                var restartDialog = new ContentDialog
+                {
+                    Title = "Data Cleared",
+                    Content = "All data has been cleared successfully. The application will now restart.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await restartDialog.ShowAsync();
+                
+                // Restart app
+                await Windows.ApplicationModel.Core.CoreApplication.RequestRestartAsync(string.Empty);
             }
         }
     }

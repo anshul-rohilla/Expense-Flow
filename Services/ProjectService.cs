@@ -163,6 +163,12 @@ public class ProjectService : IProjectService
                 return ServiceResult<bool>.FailureResult("Cannot delete the default project.");
             }
 
+            // Additional protection for "Personal" project
+            if (project.Name.Equals("Personal", StringComparison.OrdinalIgnoreCase))
+            {
+                return ServiceResult<bool>.FailureResult("Cannot delete the Personal project.");
+            }
+
             await _projectRepository.DeleteAsync(project);
             return ServiceResult<bool>.SuccessResult(true, "Project deleted successfully.");
         }

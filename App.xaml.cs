@@ -31,6 +31,8 @@ namespace Expense_Flow
         private Window? _window;
         public static IHost? Host { get; private set; }
 
+        public Window? Window => _window;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -65,6 +67,7 @@ namespace Expense_Flow
                     services.AddTransient<IProjectGroupService, ProjectGroupService>();
                     services.AddTransient<IExpenseService, ExpenseService>();
                     services.AddTransient<IExpenseTypeService, ExpenseTypeService>();
+                    services.AddSingleton<IFileStorageService, FileStorageService>();
 
                     services.AddTransient<DashboardViewModel>();
                     services.AddTransient<ExpensesViewModel>();

@@ -87,6 +87,12 @@
                               Header="Archived"
                               IsOn="{x:Bind ViewModel.ShowArchived, Mode=TwoWay}"
                               Toggled="ShowArchived_Toggled" />
+                <Button Content="Add Group"
+                        Click="AddProjectGroup_Click">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="G" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                </Button>
                 <Button Content="Add Project"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Click="AddProject_Click">

@@ -46,7 +46,8 @@
                           Minimum="0"
                           SmallChange="100"
                           LargeChange="1000"
-                          Style="{StaticResource ModernTextBoxStyle}"/>
+                          CornerRadius="8"
+                          MinHeight="44"/>
                 <TextBlock x:Name="AnnualBudgetHint"
                           Style="{StaticResource CaptionTextBlockStyle}"
                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"

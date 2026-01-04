@@ -33,6 +33,32 @@ public sealed partial class SubscriptionDialog : ContentDialog
         {
             NameTextBox.Text = subscription.Name ?? string.Empty;
             ReferenceTextBox.Text = subscription.Reference ?? string.Empty;
+            
+            // Set radio button based on IsVendor flag
+            if (subscription.IsVendor)
+            {
+                VendorRadioButton.IsChecked = true;
+            }
+            else
+            {
+                SubscriptionRadioButton.IsChecked = true;
+            }
+        }
+
+        // Update title based on radio button selection
+        SubscriptionRadioButton.Checked += (s, e) => UpdateDialogTitle();
+        VendorRadioButton.Checked += (s, e) => UpdateDialogTitle();
+    }
+
+    private void UpdateDialogTitle()
+    {
+        if (VendorRadioButton.IsChecked == true)
+        {
+            Title = _isEditMode ? "Edit Vendor" : "Add Vendor";
+        }
+        else
+        {
+            Title = _isEditMode ? "Edit Subscription" : "Add Subscription";
         }
     }
 
@@ -148,6 +174,7 @@ public sealed partial class SubscriptionDialog : ContentDialog
         Subscription.Type = selectedType.Name;
         Subscription.Reference = string.IsNullOrWhiteSpace(ReferenceTextBox.Text) ? null : ReferenceTextBox.Text.Trim();
         Subscription.ContactId = contact.Id;
+        Subscription.IsVendor = VendorRadioButton.IsChecked == true;
     }
 
     private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
