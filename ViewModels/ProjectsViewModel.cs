@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,18 @@ using Expense_Flow.Services;
 
 namespace Expense_Flow.ViewModels;
 
+/// <summary>
+/// Represents a group section on the Projects page containing a group header and its projects.
+/// </summary>
+public class ProjectGroupSection
+{
+    public ProjectGroup? Group { get; set; }
+    public string GroupName => Group?.Name ?? "Others";
+    public string? GroupDescription => Group?.Description;
+    public bool IsDefaultSection => Group == null;
+    public ObservableCollection<Project> Projects { get; set; } = new();
+}
+
 public partial class ProjectsViewModel : ViewModelBase
 {
     private readonly IProjectService _projectService;
@@ -18,7 +31,13 @@ public partial class ProjectsViewModel : ViewModelBase
     private ObservableCollection<Project> _projects = new();
 
     [ObservableProperty]
+    private ObservableCollection<Project> _filteredProjects = new();
+
+    [ObservableProperty]
     private ObservableCollection<ProjectGroup> _projectGroups = new();
+
+    [ObservableProperty]
+    private ObservableCollection<ProjectGroupSection> _groupSections = new();
 
     [ObservableProperty]
     private Project? _selectedProject;
@@ -34,6 +53,8 @@ public partial class ProjectsViewModel : ViewModelBase
 
     [ObservableProperty]
     private int _selectedTabIndex = 0;
+
+    private string _currentFilter = "All";
 
     public ProjectsViewModel(IProjectService projectService, IProjectGroupService projectGroupService)
     {
@@ -56,6 +77,112 @@ public partial class ProjectsViewModel : ViewModelBase
                 SetError(result.GetErrorMessage());
             }
         }, "Loading projects...");
+    }
+
+    /// <summary>
+    /// Loads projects and groups, then builds grouped sections.
+    /// </summary>
+    [RelayCommand]
+    private async Task LoadAllAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            // Load projects
+            var projectResult = await _projectService.GetAllProjectsAsync(ShowArchived);
+            if (projectResult.Success && projectResult.Data != null)
+            {
+                Projects = new ObservableCollection<Project>(projectResult.Data);
+            }
+
+            // Load groups
+            var groupResult = await _projectGroupService.GetAllProjectGroupsAsync();
+            if (groupResult.Success && groupResult.Data != null)
+            {
+                ProjectGroups = new ObservableCollection<ProjectGroup>(groupResult.Data);
+            }
+
+            // Build grouped sections
+            await BuildGroupSectionsAsync();
+        }, "Loading projects...");
+    }
+
+    private async Task BuildGroupSectionsAsync()
+    {
+        var sections = new List<ProjectGroupSection>();
+        var assignedProjectIds = new HashSet<int>();
+
+        // Apply filter to projects
+        var filtered = ApplyFilterToProjects(Projects);
+
+        // Build a section for each group
+        foreach (var group in ProjectGroups)
+        {
+            var projectsInGroupResult = await _projectGroupService.GetProjectsInGroupAsync(group.Id);
+            var section = new ProjectGroupSection { Group = group };
+
+            if (projectsInGroupResult.Success && projectsInGroupResult.Data != null)
+            {
+                var groupProjectIds = projectsInGroupResult.Data.Select(p => p.Id).ToHashSet();
+                // Use the filtered projects list to get the actual project objects (with Expenses loaded)
+                var matchingProjects = filtered.Where(p => groupProjectIds.Contains(p.Id)).ToList();
+                section.Projects = new ObservableCollection<Project>(matchingProjects);
+
+                foreach (var id in groupProjectIds)
+                {
+                    assignedProjectIds.Add(id);
+                }
+            }
+
+            sections.Add(section);
+        }
+
+        // "Others" section for ungrouped projects
+        var ungroupedProjects = filtered.Where(p => !assignedProjectIds.Contains(p.Id)).ToList();
+        if (ungroupedProjects.Any() || !sections.Any())
+        {
+            sections.Add(new ProjectGroupSection
+            {
+                Group = null,
+                Projects = new ObservableCollection<Project>(ungroupedProjects)
+            });
+        }
+
+        GroupSections = new ObservableCollection<ProjectGroupSection>(sections);
+        FilteredProjects = new ObservableCollection<Project>(filtered);
+    }
+
+    private IEnumerable<Project> ApplyFilterToProjects(IEnumerable<Project> projects)
+    {
+        var filtered = projects.AsEnumerable();
+
+        switch (_currentFilter)
+        {
+            case "Active":
+                filtered = filtered.Where(p => !p.IsArchived);
+                break;
+            case "Default":
+                filtered = filtered.Where(p => p.IsDefault);
+                break;
+        }
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            filtered = filtered.Where(p =>
+                p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return filtered;
+    }
+
+    public async Task ApplyFilterAsync(string filter)
+    {
+        _currentFilter = filter;
+        await BuildGroupSectionsAsync();
+    }
+
+    private void ApplyFilter()
+    {
+        _ = BuildGroupSectionsAsync();
     }
 
     [RelayCommand]
@@ -85,7 +212,7 @@ public partial class ProjectsViewModel : ViewModelBase
             var result = await _projectService.ArchiveProjectAsync(project.Id);
             if (result.Success)
             {
-                await LoadProjectsAsync();
+                await LoadAllAsync();
             }
             else
             {
@@ -104,7 +231,7 @@ public partial class ProjectsViewModel : ViewModelBase
             var result = await _projectService.UnarchiveProjectAsync(project.Id);
             if (result.Success)
             {
-                await LoadProjectsAsync();
+                await LoadAllAsync();
             }
             else
             {
@@ -124,6 +251,7 @@ public partial class ProjectsViewModel : ViewModelBase
             if (result.Success)
             {
                 Projects.Remove(project);
+                await BuildGroupSectionsAsync();
             }
             else
             {
@@ -143,6 +271,7 @@ public partial class ProjectsViewModel : ViewModelBase
             if (result.Success)
             {
                 ProjectGroups.Remove(projectGroup);
+                await BuildGroupSectionsAsync();
             }
             else
             {
@@ -153,6 +282,11 @@ public partial class ProjectsViewModel : ViewModelBase
 
     partial void OnShowArchivedChanged(bool value)
     {
-        _ = LoadProjectsAsync();
+        _ = LoadAllAsync();
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
     }
 }

@@ -15,4 +15,6 @@ public interface IRepository<T> where T : class
     Task DeleteAsync(T entity);
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
     Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+    Task<IEnumerable<T>> GetAllWithIncludeAsync<TProperty>(Expression<Func<T, TProperty>> includeProperty);
+    Task<IEnumerable<T>> FindWithIncludeAsync<TProperty>(Expression<Func<T, bool>> predicate, Expression<Func<T, TProperty>> includeProperty);
 }

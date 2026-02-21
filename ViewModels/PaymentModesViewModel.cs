@@ -13,6 +13,7 @@ public partial class PaymentModesViewModel : ViewModelBase
 {
     private readonly IPaymentModeService _paymentModeService;
     private readonly ISettingsService _settingsService;
+    private readonly IOrganizationService _organizationService;
 
     [ObservableProperty]
     private ObservableCollection<PaymentMode> _allPaymentModes = new();
@@ -32,10 +33,11 @@ public partial class PaymentModesViewModel : ViewModelBase
     [ObservableProperty]
     private string _currencySymbol = "$";
 
-    public PaymentModesViewModel(IPaymentModeService paymentModeService, ISettingsService settingsService)
+    public PaymentModesViewModel(IPaymentModeService paymentModeService, ISettingsService settingsService, IOrganizationService organizationService)
     {
         _paymentModeService = paymentModeService;
         _settingsService = settingsService;
+        _organizationService = organizationService;
         _currencySymbol = _settingsService.GetCurrencySymbol();
     }
 
@@ -47,7 +49,8 @@ public partial class PaymentModesViewModel : ViewModelBase
             // Refresh currency symbol in case it changed
             CurrencySymbol = _settingsService.GetCurrencySymbol();
             
-            var result = await _paymentModeService.GetAllPaymentModesAsync();
+            var orgId = _organizationService.GetCurrentOrganizationId();
+            var result = await _paymentModeService.GetAllPaymentModesAsync(orgId);
             if (result.Success && result.Data != null)
             {
                 AllPaymentModes = new ObservableCollection<PaymentMode>(result.Data);

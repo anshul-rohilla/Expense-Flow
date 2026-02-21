@@ -57,16 +57,16 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Spacing="8">
-                <TextBlock Text="Subscriptions and Vendors" 
+                <TextBlock Text="Subscriptions" 
                          Style="{StaticResource PageTitleTextStyle}"/>
-                <TextBlock Text="Track recurring subscriptions and vendor relationships"
+                <TextBlock Text="Track recurring subscriptions and billing cycles"
                          Style="{StaticResource BodyTextBlockStyle}"
                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                          TextWrapping="Wrap"/>
             </StackPanel>
 
             <Button Grid.Column="1"
-                  Content="Add Subscription/Vendor" 
+                  Content="Add Subscription" 
                   Style="{StaticResource PrimaryButtonStyle}"
                   VerticalAlignment="Center"
                   Click="AddSubscription_Click">
@@ -83,7 +83,7 @@
               Padding="16"
               Margin="0,0,0,24"
               Translation="0,0,8">
-            <TextBox PlaceholderText="Search subscriptions and vendors..."
+            <TextBox PlaceholderText="Search subscriptions..."
                    Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                    BorderThickness="0"
                    Background="Transparent">
@@ -122,17 +122,17 @@
                           HorizontalAlignment="Center">
                         <FontIcon Glyph="&#xE910;" FontSize="40" Foreground="White"/>
                     </Border>
-                    <TextBlock Text="No subscriptions or vendors yet"
+                    <TextBlock Text="No subscriptions yet"
                              Style="{StaticResource SectionTitleTextStyle}"
                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="Add subscriptions (like Netflix, Spotify) or vendors (like suppliers, service providers) to track payments"
+                    <TextBlock Text="Add subscriptions (like Netflix, Spotify, Azure) to track recurring payments and billing cycles"
                              Style="{StaticResource BodyTextBlockStyle}"
                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                              HorizontalAlignment="Center"
                              TextWrapping="Wrap"
                              TextAlignment="Center"
                              MaxWidth="400"/>
-                    <Button Content="Add Your First Subscription/Vendor"
+                    <Button Content="Add Your First Subscription"
                           Style="{StaticResource PrimaryButtonStyle}"
                           HorizontalAlignment="Center"
                           Click="AddSubscription_Click"/>
@@ -167,19 +167,24 @@
 
                                     <!-- Subscription Info -->
                                     <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Name}" 
+                                        <TextBlock Text="{x:Bind DisplayNameWithVendor}" 
                                                  Style="{StaticResource CardTitleTextStyle}"/>
                                         <StackPanel Orientation="Horizontal" Spacing="16">
                                             <StackPanel Orientation="Horizontal" Spacing="6"
-                                                      Visibility="{x:Bind Type, Converter={StaticResource NullToVisibilityConverter}}">
+                                                      Visibility="{x:Bind Plan, Converter={StaticResource NullToVisibilityConverter}}">
                                                 <FontIcon Glyph="&#xE8EA;" FontSize="14" Foreground="{StaticResource AccentBrush}"/>
-                                                <TextBlock Text="{x:Bind Type}" 
+                                                <TextBlock Text="{x:Bind Plan}" 
+                                                         Style="{StaticResource CaptionTextBlockStyle}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE787;" FontSize="14" Foreground="{StaticResource PrimaryBrush}"/>
+                                                <TextBlock Text="{x:Bind DisplayBillingCycle}" 
                                                          Style="{StaticResource CaptionTextBlockStyle}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Spacing="6"
-                                                      Visibility="{x:Bind Reference, Converter={StaticResource NullToVisibilityConverter}}">
-                                                <FontIcon Glyph="&#xE77B;" FontSize="14" Foreground="{StaticResource PrimaryBrush}"/>
-                                                <TextBlock Text="{x:Bind Reference}" 
+                                                      Visibility="{x:Bind DisplayAmount, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{x:Bind DisplayAmount}" 
                                                          Style="{StaticResource CaptionTextBlockStyle}"/>
                                             </StackPanel>
                                         </StackPanel>

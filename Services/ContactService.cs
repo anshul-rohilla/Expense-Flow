@@ -11,12 +11,13 @@ namespace Expense_Flow.Services;
 
 public interface IContactService
 {
-    Task<ServiceResult<IEnumerable<Contact>>> GetAllContactsAsync();
+    Task<ServiceResult<IEnumerable<Contact>>> GetAllContactsAsync(int organizationId);
+    Task<ServiceResult<IEnumerable<Contact>>> GetTeamMembersAsync(int organizationId);
     Task<ServiceResult<Contact>> GetContactByIdAsync(int id);
     Task<ServiceResult<Contact>> CreateContactAsync(Contact contact);
     Task<ServiceResult<Contact>> UpdateContactAsync(Contact contact);
     Task<ServiceResult<bool>> DeleteContactAsync(int id);
-    Task<ServiceResult<bool>> ContactExistsAsync(string name, int? excludeId = null);
+    Task<ServiceResult<bool>> ContactExistsAsync(string name, int organizationId, int? excludeId = null);
 }
 
 public class ContactService : IContactService
@@ -30,16 +31,31 @@ public class ContactService : IContactService
         _userService = userService;
     }
 
-    public async Task<ServiceResult<IEnumerable<Contact>>> GetAllContactsAsync()
+    public async Task<ServiceResult<IEnumerable<Contact>>> GetAllContactsAsync(int organizationId)
     {
         try
         {
-            var contacts = await _contactRepository.GetAllAsync();
+            var contacts = await _contactRepository.FindAsync(c => c.OrganizationId == organizationId);
             return ServiceResult<IEnumerable<Contact>>.SuccessResult(contacts.OrderBy(c => c.Name));
         }
         catch (Exception ex)
         {
             return ServiceResult<IEnumerable<Contact>>.FailureResult($"Error retrieving contacts: {ex.Message}");
+        }
+    }
+
+    public async Task<ServiceResult<IEnumerable<Contact>>> GetTeamMembersAsync(int organizationId)
+    {
+        try
+        {
+            var contacts = await _contactRepository.FindAsync(c => 
+                c.OrganizationId == organizationId && 
+                (c.Role == ContactRole.TeamMember || c.Role == ContactRole.Both));
+            return ServiceResult<IEnumerable<Contact>>.SuccessResult(contacts.OrderBy(c => c.Name));
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<IEnumerable<Contact>>.FailureResult($"Error: {ex.Message}");
         }
     }
 
@@ -104,6 +120,7 @@ public class ContactService : IContactService
             existingContact.Reference = contact.Reference;
             existingContact.Phone = contact.Phone;
             existingContact.Email = contact.Email;
+            existingContact.Role = contact.Role;
             existingContact.ModifiedAt = DateTime.Now;
             existingContact.ModifiedBy = _userService.GetCurrentUsername();
 
@@ -135,12 +152,13 @@ public class ContactService : IContactService
         }
     }
 
-    public async Task<ServiceResult<bool>> ContactExistsAsync(string name, int? excludeId = null)
+    public async Task<ServiceResult<bool>> ContactExistsAsync(string name, int organizationId, int? excludeId = null)
     {
         try
         {
             var exists = await _contactRepository.ExistsAsync(c =>
                 c.Name.ToLower() == name.ToLower() &&
+                c.OrganizationId == organizationId &&
                 (!excludeId.HasValue || c.Id != excludeId.Value));
 
             return ServiceResult<bool>.SuccessResult(exists);
@@ -171,7 +189,7 @@ public class ContactService : IContactService
             errors.Add("Phone number format is invalid.");
         }
 
-        var existsResult = await ContactExistsAsync(contact.Name, excludeId);
+        var existsResult = await ContactExistsAsync(contact.Name, contact.OrganizationId, excludeId);
         if (existsResult.Success && existsResult.Data)
         {
             errors.Add($"A contact with the name '{contact.Name}' already exists.");

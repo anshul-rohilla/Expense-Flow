@@ -11,8 +11,7 @@ public sealed partial class SubscriptionDialog : ContentDialog
 {
     public Subscription Subscription { get; private set; }
     private bool _isEditMode;
-    public ObservableCollection<Contact> Contacts { get; } = new();
-    public ObservableCollection<ExpenseType> ExpenseTypes { get; } = new();
+    public ObservableCollection<Vendor> Vendors { get; } = new();
 
     public SubscriptionDialog(Subscription? subscription = null)
     {
@@ -22,127 +21,95 @@ public sealed partial class SubscriptionDialog : ContentDialog
         PrimaryButtonText = _isEditMode ? "Update" : "Create";
         SecondaryButtonText = "Cancel";
 
-        // Initialize the Subscription property
         Subscription = subscription ?? new Subscription();
-        
-        LoadContactsAsync();
-        LoadExpenseTypesAsync();
 
-        // Set initial values if in edit mode
+        LoadVendorsAsync();
+
+        // Set billing cycle to Monthly by default
+        BillingCycleComboBox.SelectedIndex = 0;
+
+        // Set currency to app default
+        var settingsService = App.Host!.Services.GetRequiredService<Services.ISettingsService>();
+        var defaultCurrency = settingsService.Currency ?? "INR";
+        SelectCurrency(_isEditMode && subscription != null ? (subscription.Currency ?? defaultCurrency) : defaultCurrency);
+
         if (_isEditMode && subscription != null)
         {
             NameTextBox.Text = subscription.Name ?? string.Empty;
+            PlanTextBox.Text = subscription.Plan ?? string.Empty;
             ReferenceTextBox.Text = subscription.Reference ?? string.Empty;
-            
-            // Set radio button based on IsVendor flag
-            if (subscription.IsVendor)
+            NotesTextBox.Text = subscription.Notes ?? string.Empty;
+
+            if (subscription.Amount.HasValue)
             {
-                VendorRadioButton.IsChecked = true;
+                AmountNumberBox.Value = (double)subscription.Amount.Value;
             }
-            else
+
+            // Set billing cycle
+            var billingCycleTag = subscription.BillingCycle.ToString();
+            for (int i = 0; i < BillingCycleComboBox.Items.Count; i++)
             {
-                SubscriptionRadioButton.IsChecked = true;
+                if (BillingCycleComboBox.Items[i] is ComboBoxItem item &&
+                    item.Tag?.ToString() == billingCycleTag)
+                {
+                    BillingCycleComboBox.SelectedIndex = i;
+                    break;
+                }
             }
         }
-
-        // Update title based on radio button selection
-        SubscriptionRadioButton.Checked += (s, e) => UpdateDialogTitle();
-        VendorRadioButton.Checked += (s, e) => UpdateDialogTitle();
     }
 
-    private void UpdateDialogTitle()
+    private void SelectCurrency(string currencyCode)
     {
-        if (VendorRadioButton.IsChecked == true)
+        for (int i = 0; i < CurrencyComboBox.Items.Count; i++)
         {
-            Title = _isEditMode ? "Edit Vendor" : "Add Vendor";
+            if (CurrencyComboBox.Items[i] is ComboBoxItem item &&
+                item.Tag?.ToString() == currencyCode)
+            {
+                CurrencyComboBox.SelectedIndex = i;
+                return;
+            }
         }
-        else
-        {
-            Title = _isEditMode ? "Edit Subscription" : "Add Subscription";
-        }
+        CurrencyComboBox.SelectedIndex = 0; // Default to first (INR)
     }
 
-    private async void LoadContactsAsync()
+    private async void LoadVendorsAsync()
     {
         try
         {
-            var contactService = App.Host!.Services.GetRequiredService<Services.IContactService>();
-            var result = await contactService.GetAllContactsAsync();
-            
+            var vendorService = App.Host!.Services.GetRequiredService<Services.IVendorService>();
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            var orgId = orgService.GetCurrentOrganizationId();
+            var result = await vendorService.GetAllVendorsAsync(orgId);
+
             if (result.Success && result.Data != null)
             {
-                Contacts.Clear();
-                Contacts.Add(new Contact { Id = 0, Name = "(None)" });
-                foreach (var contact in result.Data)
+                Vendors.Clear();
+                foreach (var vendor in result.Data)
                 {
-                    Contacts.Add(contact);
+                    Vendors.Add(vendor);
                 }
 
-                if (_isEditMode && Subscription.ContactId.HasValue)
+                if (_isEditMode && Subscription.VendorId > 0)
                 {
-                    ContactComboBox.SelectedItem = Contacts.FirstOrDefault(c => c.Id == Subscription.ContactId.Value);
+                    VendorComboBox.SelectedItem = Vendors.FirstOrDefault(v => v.Id == Subscription.VendorId);
                 }
-                else
+                else if (Vendors.Count > 0)
                 {
-                    ContactComboBox.SelectedIndex = 0;
+                    VendorComboBox.SelectedIndex = 0;
                 }
             }
         }
         catch (Exception ex)
         {
-            // Handle error silently or show error message
-            System.Diagnostics.Debug.WriteLine($"Error loading contacts: {ex.Message}");
-            // Ensure at least the "(None)" option is available
-            if (Contacts.Count == 0)
-            {
-                Contacts.Add(new Contact { Id = 0, Name = "(None)" });
-                ContactComboBox.SelectedIndex = 0;
-            }
-        }
-    }
-
-    private async void LoadExpenseTypesAsync()
-    {
-        try
-        {
-            var expenseTypeService = App.Host!.Services.GetRequiredService<Services.IExpenseTypeService>();
-            var result = await expenseTypeService.GetAllExpenseTypesAsync();
-            
-            if (result.Success && result.Data != null)
-            {
-                ExpenseTypes.Clear();
-                foreach (var type in result.Data)
-                {
-                    ExpenseTypes.Add(type);
-                }
-
-                if (_isEditMode && !string.IsNullOrEmpty(Subscription.Type))
-                {
-                    var matchingType = ExpenseTypes.FirstOrDefault(et => et.Name == Subscription.Type);
-                    if (matchingType != null)
-                    {
-                        TypeComboBox.SelectedItem = matchingType;
-                    }
-                }
-                else if (ExpenseTypes.Count > 0)
-                {
-                    TypeComboBox.SelectedIndex = 0;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Handle error silently or show error message
-            System.Diagnostics.Debug.WriteLine($"Error loading expense types: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error loading vendors: {ex.Message}");
         }
     }
 
     private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        // Reset error message
         ErrorTextBlock.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
 
-        // Validate Name
         if (string.IsNullOrWhiteSpace(NameTextBox.Text))
         {
             args.Cancel = true;
@@ -151,30 +118,41 @@ public sealed partial class SubscriptionDialog : ContentDialog
             return;
         }
 
-        // Validate Type (mandatory)
-        if (TypeComboBox.SelectedItem is not ExpenseType selectedType)
+        if (VendorComboBox.SelectedItem is not Vendor selectedVendor)
         {
             args.Cancel = true;
-            ErrorTextBlock.Text = "Type is required.";
+            ErrorTextBlock.Text = "Vendor is required.";
             ErrorTextBlock.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
             return;
         }
 
-        // Validate Contact (mandatory)
-        if (ContactComboBox.SelectedItem is not Contact contact || contact.Id <= 0)
+        // Set organization ID for new subscriptions
+        if (!_isEditMode)
         {
-            args.Cancel = true;
-            ErrorTextBlock.Text = "Contact is required.";
-            ErrorTextBlock.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
-            return;
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            Subscription.OrganizationId = orgService.GetCurrentOrganizationId();
         }
 
-        // All validations passed
         Subscription.Name = NameTextBox.Text.Trim();
-        Subscription.Type = selectedType.Name;
+        Subscription.VendorId = selectedVendor.Id;
+        Subscription.Plan = string.IsNullOrWhiteSpace(PlanTextBox.Text) ? null : PlanTextBox.Text.Trim();
         Subscription.Reference = string.IsNullOrWhiteSpace(ReferenceTextBox.Text) ? null : ReferenceTextBox.Text.Trim();
-        Subscription.ContactId = contact.Id;
-        Subscription.IsVendor = VendorRadioButton.IsChecked == true;
+        Subscription.Notes = string.IsNullOrWhiteSpace(NotesTextBox.Text) ? null : NotesTextBox.Text.Trim();
+        Subscription.Currency = CurrencyComboBox.SelectedItem is ComboBoxItem currItem
+            ? currItem.Tag?.ToString() ?? "INR"
+            : "INR";
+
+        if (!double.IsNaN(AmountNumberBox.Value))
+        {
+            Subscription.Amount = (decimal)AmountNumberBox.Value;
+        }
+
+        // Parse billing cycle
+        if (BillingCycleComboBox.SelectedItem is ComboBoxItem billingItem)
+        {
+            var tag = billingItem.Tag?.ToString() ?? "Monthly";
+            Subscription.BillingCycle = Enum.TryParse<BillingCycle>(tag, out var cycle) ? cycle : BillingCycle.Monthly;
+        }
     }
 
     private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

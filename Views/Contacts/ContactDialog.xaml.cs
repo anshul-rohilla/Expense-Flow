@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using Expense_Flow.Models;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Text.RegularExpressions;
 
@@ -79,6 +80,12 @@ public sealed partial class ContactDialog : ContentDialog
         }
 
         // All validations passed, update contact
+        if (!_isEditMode)
+        {
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            Contact.OrganizationId = orgService.GetCurrentOrganizationId();
+        }
+
         Contact.Name = NameTextBox.Text.Trim();
         Contact.Reference = string.IsNullOrWhiteSpace(ReferenceTextBox.Text) ? null : ReferenceTextBox.Text.Trim();
         Contact.Phone = PhoneTextBox.Text.Trim();

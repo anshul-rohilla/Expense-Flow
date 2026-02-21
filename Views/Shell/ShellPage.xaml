@@ -42,6 +42,16 @@
                          FontSize="13"
                          FontWeight="SemiBold"
                          VerticalAlignment="Center"/>
+                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                      CornerRadius="4"
+                      Padding="8,2"
+                      VerticalAlignment="Center">
+                    <TextBlock x:Name="OrgNameText"
+                             Text="Personal"
+                             FontSize="11"
+                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                             VerticalAlignment="Center"/>
+                </Border>
             </StackPanel>
 
             <!-- Right: User Profile -->
@@ -268,8 +278,8 @@
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
 
-                <!-- Subscriptions and Vendors -->
-                <NavigationViewItem Tag="Subscriptions" ToolTipService.ToolTip="Subscriptions &amp; Vendors">
+                <!-- Subscriptions -->
+                <NavigationViewItem Tag="Subscriptions" ToolTipService.ToolTip="Subscriptions">
                     <NavigationViewItem.Content>
                         <StackPanel HorizontalAlignment="Center" 
                                   Spacing="4"
@@ -285,7 +295,41 @@
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
 
+                <!-- Vendors -->
+                <NavigationViewItem Tag="Vendors" ToolTipService.ToolTip="Vendors">
+                    <NavigationViewItem.Content>
+                        <StackPanel HorizontalAlignment="Center" 
+                                  Spacing="4"
+                                  Padding="2">
+                            <FontIcon Glyph="&#xE731;" FontSize="20"/>
+                            <TextBlock Text="Vendors" 
+                                     FontSize="10" 
+                                     TextAlignment="Center"
+                                     TextTrimming="CharacterEllipsis"
+                                     MaxLines="1"
+                                     MaxWidth="100"/>
+                        </StackPanel>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+
                 <NavigationViewItemSeparator/>
+
+                <!-- Settlements -->
+                <NavigationViewItem Tag="Settlements" ToolTipService.ToolTip="Settlements &amp; Reimbursements">
+                    <NavigationViewItem.Content>
+                        <StackPanel HorizontalAlignment="Center" 
+                                  Spacing="4"
+                                  Padding="2">
+                            <FontIcon Glyph="&#xE8B1;" FontSize="20"/>
+                            <TextBlock Text="Settlements" 
+                                     FontSize="10" 
+                                     TextAlignment="Center"
+                                     TextTrimming="CharacterEllipsis"
+                                     MaxLines="1"
+                                     MaxWidth="100"/>
+                        </StackPanel>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
 
                 <!-- Reports -->
                 <NavigationViewItem Tag="Reports" ToolTipService.ToolTip="Reports">

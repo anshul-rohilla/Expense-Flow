@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog x:Class="Expense_Flow.Views.Settlements.SettlementDialog"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               mc:Ignorable="d"
+               Style="{StaticResource ModernContentDialogStyle}"
+               Title="New Settlement"
+               PrimaryButtonText="Create Settlement"
+               SecondaryButtonText="Cancel"
+               PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+               SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+               DefaultButton="Primary">
+
+    <StackPanel Spacing="16" MinWidth="500">
+        <TextBlock x:Name="ErrorTextBlock"
+                   Foreground="{StaticResource ErrorBrush}"
+                   TextWrapping="Wrap"
+                   Visibility="Collapsed" />
+
+        <!-- Reference -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Settlement Reference *"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBox x:Name="ReferenceTextBox"
+                     PlaceholderText="e.g., SETTLE-2025-001"
+                     Style="{StaticResource ModernTextBoxStyle}" />
+        </StackPanel>
+
+        <!-- Payment Mode -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Payment Mode"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <ComboBox x:Name="PaymentModeComboBox"
+                      ItemsSource="{x:Bind PaymentModes, Mode=OneWay}"
+                      DisplayMemberPath="Name"
+                      HorizontalAlignment="Stretch"
+                      PlaceholderText="Select payment mode"
+                      Style="{StaticResource ModernComboBoxStyle}"/>
+        </StackPanel>
+
+        <!-- Transaction Reference -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Transaction Reference"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBox x:Name="TransactionReferenceTextBox"
+                     PlaceholderText="Bank reference, UPI ID, check number..."
+                     Style="{StaticResource ModernTextBoxStyle}" />
+        </StackPanel>
+
+        <!-- Select Expenses -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Select Expenses to Settle *"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock x:Name="TotalAmountText"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       Margin="0,0,0,8"/>
+            <ScrollViewer MaxHeight="250">
+                <ListView x:Name="ExpenseListView"
+                         SelectionMode="Multiple"
+                         SelectionChanged="ExpenseListView_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="12" Padding="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" 
+                                         Text="{Binding Name}"
+                                         VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" 
+                                         Text="{Binding PendingReimbursement}"
+                                         FontWeight="SemiBold"
+                                         VerticalAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
+        </StackPanel>
+
+        <TextBlock Text="* Required fields"
+                   Style="{StaticResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+    </StackPanel>
+</ContentDialog>

@@ -29,19 +29,19 @@ public partial class DashboardViewModel : ViewModelBase
     private DateRangeFilter _selectedDateRange = DateRangeFilter.Last30Days;
 
     [ObservableProperty]
-    private string _totalExpenses = "?0.00";
+    private string _totalExpenses = string.Empty;
 
     [ObservableProperty]
     private int _activeProjectsCount;
 
     [ObservableProperty]
-    private string _thisMonthExpenses = "?0.00";
+    private string _thisMonthExpenses = string.Empty;
 
     [ObservableProperty]
     private double _budgetUsedPercentage;
 
     [ObservableProperty]
-    private string _budgetRemaining = "?0.00";
+    private string _budgetRemaining = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<Expense> _recentExpenses = new();
@@ -69,6 +69,12 @@ public partial class DashboardViewModel : ViewModelBase
         _expenseService = expenseService;
         _projectService = projectService;
         _settingsService = settingsService;
+
+        // Initialize with properly formatted currency from settings
+        var zero = _settingsService.FormatCurrency(0);
+        _totalExpenses = zero;
+        _thisMonthExpenses = zero;
+        _budgetRemaining = zero;
     }
 
     partial void OnSelectedDateRangeChanged(DateRangeFilter value)

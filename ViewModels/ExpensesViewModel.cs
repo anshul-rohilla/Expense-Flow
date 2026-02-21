@@ -15,6 +15,7 @@ public partial class ExpensesViewModel : ViewModelBase
     private readonly IProjectService _projectService;
     private readonly IExpenseTypeService? _expenseTypeService;
     private readonly IPaymentModeService? _paymentModeService;
+    private readonly IOrganizationService? _organizationService;
 
     [ObservableProperty]
     private ObservableCollection<Expense> _expenses = new();
@@ -59,11 +60,13 @@ public partial class ExpensesViewModel : ViewModelBase
     public ExpensesViewModel(
         IExpenseService expenseService, 
         IProjectService projectService,
+        IOrganizationService? organizationService = null,
         IExpenseTypeService? expenseTypeService = null,
         IPaymentModeService? paymentModeService = null)
     {
         _expenseService = expenseService;
         _projectService = projectService;
+        _organizationService = organizationService;
         _expenseTypeService = expenseTypeService;
         _paymentModeService = paymentModeService;
     }
@@ -128,7 +131,8 @@ public partial class ExpensesViewModel : ViewModelBase
     {
         if (_paymentModeService == null) return;
         
-        var result = await _paymentModeService.GetAllPaymentModesAsync();
+        var orgId = _organizationService?.GetCurrentOrganizationId() ?? 1;
+        var result = await _paymentModeService.GetAllPaymentModesAsync(orgId);
         if (result.Success && result.Data != null)
         {
             PaymentModes = new ObservableCollection<PaymentMode>(result.Data);

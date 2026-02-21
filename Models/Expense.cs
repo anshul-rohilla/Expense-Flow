@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -66,9 +67,22 @@ public class Expense
     [Required]
     public DateTime PaymentDate { get; set; } = DateTime.Now;
 
-    // Subscription/Vendor (Optional)
+    // Vendor (Optional - global vendor reference)
+    public int? VendorId { get; set; }
+    public Vendor? Vendor { get; set; }
+
+    // Subscription (Optional)
     public int? SubscriptionId { get; set; }
     public Subscription? Subscription { get; set; }
+
+    // Who paid (Contact as team member)
+    public int? PaidById { get; set; }
+    public Contact? PaidBy { get; set; }
+
+    // Fund source & reimbursement
+    public FundSource FundSource { get; set; } = FundSource.Company;
+    public ReimbursementStatus ReimbursementStatus { get; set; } = ReimbursementStatus.NotApplicable;
+    public decimal ReimbursedAmount { get; set; } = 0;
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public string? CreatedBy { get; set; }
@@ -76,10 +90,26 @@ public class Expense
     public DateTime? ModifiedAt { get; set; }
     public string? ModifiedBy { get; set; }
 
+    // Navigation
+    public ICollection<SettlementItem> SettlementItems { get; set; } = new List<SettlementItem>();
+
     // Computed properties for display
     [NotMapped]
     public bool HasBillingPeriod => BillingPeriodStart.HasValue && BillingPeriodEnd.HasValue;
 
     [NotMapped]
     public bool HasInvoiceFile => InvoiceFileGuid.HasValue;
+
+    [NotMapped]
+    public decimal PendingReimbursement => PaymentAmount - ReimbursedAmount;
+
+    [NotMapped]
+    public string ReimbursementStatusDisplay => ReimbursementStatus switch
+    {
+        ReimbursementStatus.NotApplicable => "N/A",
+        ReimbursementStatus.Pending => "Pending",
+        ReimbursementStatus.Partial => $"Partial ({ReimbursedAmount:N2})",
+        ReimbursementStatus.Settled => "Settled",
+        _ => "Unknown"
+    };
 }

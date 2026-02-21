@@ -23,6 +23,13 @@ public class ExpenseTypeService : IExpenseTypeService
             expenseTypes.OrderBy(et => et.Name).ToList());
     }
 
+    public async Task<ServiceResult<IEnumerable<ExpenseType>>> GetExpenseTypesByOrganizationAsync(int organizationId)
+    {
+        var expenseTypes = await _repository.FindAsync(et => et.OrganizationId == organizationId);
+        return ServiceResult<IEnumerable<ExpenseType>>.SuccessResult(
+            expenseTypes.OrderBy(et => et.Name).ToList());
+    }
+
     public async Task<ServiceResult<ExpenseType>> GetExpenseTypeByIdAsync(int id)
     {
         var expenseType = await _repository.GetByIdAsync(id);
@@ -95,8 +102,13 @@ public class ExpenseTypeService : IExpenseTypeService
             errors.Add("Emoji is required.");
         }
 
-        // Check for duplicate name
-        var allTypes = await _repository.GetAllAsync();
+        if (expenseType.OrganizationId <= 0)
+        {
+            errors.Add("Organization is required.");
+        }
+
+        // Check for duplicate name within the same organization
+        var allTypes = await _repository.FindAsync(et => et.OrganizationId == expenseType.OrganizationId);
         var duplicate = allTypes.FirstOrDefault(et =>
             et.Name.Equals(expenseType.Name, System.StringComparison.OrdinalIgnoreCase) &&
             et.Id != excludeId);

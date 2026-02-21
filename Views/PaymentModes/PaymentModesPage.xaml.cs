@@ -4,6 +4,7 @@ using Expense_Flow.ViewModels;
 using Expense_Flow.Models;
 using Expense_Flow.Services;
 using System;
+using Microsoft.UI.Xaml;
 
 namespace Expense_Flow.Views.PaymentModes;
 
@@ -60,6 +61,13 @@ public sealed partial class PaymentModesPage : Page
             {
                 ViewModel.FilterByTypeCommand.Execute(type);
             }
+
+            // Update button styles to reflect active filter
+            var primaryStyle = (Microsoft.UI.Xaml.Style)Application.Current.Resources["PrimaryButtonStyle"];
+            FilterAllButton.Style = (typeString == "All") ? primaryStyle : null;
+            FilterCardButton.Style = (typeString == "Card") ? primaryStyle : null;
+            FilterCashButton.Style = (typeString == "Cash") ? primaryStyle : null;
+            FilterUpiButton.Style = (typeString == "UPI") ? primaryStyle : null;
         }
     }
 

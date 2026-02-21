@@ -69,6 +69,21 @@ public sealed partial class ShellPage : Page
 
     private async void ShellPage_Loaded(object sender, RoutedEventArgs e)
     {
+        // Load organization name
+        try
+        {
+            var orgService = App.Host!.Services.GetRequiredService<IOrganizationService>();
+            var orgResult = await orgService.GetDefaultOrganizationAsync();
+            if (orgResult.Success && orgResult.Data != null)
+            {
+                OrgNameText.Text = orgResult.Data.Name;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading organization: {ex.Message}");
+        }
+
         // Load user profile information
         try
         {
@@ -232,6 +247,8 @@ public sealed partial class ShellPage : Page
             "Contacts" => typeof(Contacts.ContactsPage),
             "PaymentModes" => typeof(PaymentModes.PaymentModesPage),
             "Subscriptions" => typeof(Subscriptions.SubscriptionsPage),
+            "Vendors" => typeof(Vendors.VendorsPage),
+            "Settlements" => typeof(Settlements.SettlementsPage),
             "Reports" => typeof(Reports.ReportsPage),
             "WhatsNew" => null, // Handle with dialog
             "Settings" => typeof(Settings.SettingsPage),
@@ -485,7 +502,7 @@ public sealed partial class ShellPage : Page
         });
         content.Children.Add(new TextBlock 
         { 
-            Text = "• Navigate using the sidebar menu\n• Track expenses by project and payment method\n• Manage subscriptions and contacts\n• View reports and analytics",
+            Text = "ï¿½ Navigate using the sidebar menu\nï¿½ Track expenses by project and payment method\nï¿½ Manage subscriptions and contacts\nï¿½ View reports and analytics",
             TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap
         });
 
@@ -523,7 +540,7 @@ public sealed partial class ShellPage : Page
         });
         content.Children.Add(new TextBlock 
         { 
-            Text = "© 2024 Expense Flow. All rights reserved.",
+            Text = "ï¿½ 2024 Expense Flow. All rights reserved.",
             FontSize = 12,
             Foreground = Application.Current.Resources["TextFillColorSecondaryBrush"] as Microsoft.UI.Xaml.Media.Brush,
             Margin = new Thickness(0, 8, 0, 0)

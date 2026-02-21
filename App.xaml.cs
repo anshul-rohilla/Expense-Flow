@@ -20,6 +20,7 @@ using Microsoft.Extensions.Hosting;
 using Expense_Flow.Data;
 using Expense_Flow.Services;
 using Expense_Flow.ViewModels;
+using Expense_Flow.Models;
 
 namespace Expense_Flow
 {
@@ -67,6 +68,9 @@ namespace Expense_Flow
                     services.AddTransient<IProjectGroupService, ProjectGroupService>();
                     services.AddTransient<IExpenseService, ExpenseService>();
                     services.AddTransient<IExpenseTypeService, ExpenseTypeService>();
+                    services.AddTransient<IOrganizationService, OrganizationService>();
+                    services.AddTransient<IVendorService, VendorService>();
+                    services.AddTransient<ISettlementService, SettlementService>();
                     services.AddSingleton<IFileStorageService, FileStorageService>();
 
                     services.AddTransient<DashboardViewModel>();
@@ -75,6 +79,8 @@ namespace Expense_Flow
                     services.AddTransient<ContactsViewModel>();
                     services.AddTransient<PaymentModesViewModel>();
                     services.AddTransient<SubscriptionsViewModel>();
+                    services.AddTransient<VendorsViewModel>();
+                    services.AddTransient<SettlementsViewModel>();
                     services.AddTransient<ReportsViewModel>();
                     services.AddTransient<SettingsViewModel>();
                 })

@@ -68,6 +68,64 @@
                    TextWrapping="Wrap"/>
         </StackPanel>
 
+        <!-- Organization Section -->
+        <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              Style="{StaticResource CardStyle}"
+              Translation="0,0,8">
+          <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+              <TextBlock Text="Organization"
+                       Style="{StaticResource SectionTitleTextStyle}"/>
+              <TextBlock Text="Your organization is the top-level entity that owns all projects, vendors, contacts, and settings"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Org Name -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Organization Name"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="OrgNameTextBox"
+                       PlaceholderText="Organization name"
+                       Style="{StaticResource ModernTextBoxStyle}"/>
+                <Button Grid.Column="1"
+                      Content="Save"
+                      Style="{StaticResource PrimaryButtonStyle}"
+                      Click="SaveOrgName_Click"/>
+              </Grid>
+            </StackPanel>
+
+            <!-- Org Description -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Description"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <TextBox x:Name="OrgDescriptionTextBox"
+                     PlaceholderText="Brief description (optional)"
+                     Style="{StaticResource ModernTextBoxStyle}"/>
+            </StackPanel>
+
+            <!-- Default Currency -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Default Currency"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+              <TextBox x:Name="OrgCurrencyTextBox"
+                     PlaceholderText="INR"
+                     Style="{StaticResource ModernTextBoxStyle}"
+                     IsReadOnly="True"/>
+              <TextBlock Text="Organization currency is synced with app currency setting below"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       FontSize="11"/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
         <!-- Appearance Section -->
         <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
               Style="{StaticResource CardStyle}"

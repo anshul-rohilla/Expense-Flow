@@ -10,66 +10,116 @@
                SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
                DefaultButton="Primary">
 
-    <StackPanel Spacing="16"
-                MinWidth="400">
-        <TextBlock x:Name="ErrorTextBlock"
-                   Foreground="{StaticResource ErrorBrush}"
-                   TextWrapping="Wrap"
-                   Visibility="Collapsed" />
+    <ScrollViewer MaxHeight="600">
+        <StackPanel Spacing="16"
+                    MinWidth="400">
+            <TextBlock x:Name="ErrorTextBlock"
+                       Foreground="{StaticResource ErrorBrush}"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed" />
 
-        <StackPanel Spacing="4">
-            <TextBlock Text="Type *"
-                       Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <RadioButton x:Name="SubscriptionRadioButton"
-                             Content="Subscription"
-                             IsChecked="True"
-                             GroupName="EntityType"/>
-                <RadioButton x:Name="VendorRadioButton"
-                             Content="Vendor"
-                             GroupName="EntityType"/>
-            </StackPanel>
-        </StackPanel>
-
+        <!-- Name -->
         <StackPanel Spacing="4">
             <TextBlock Text="Name *"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
             <TextBox x:Name="NameTextBox"
-                     PlaceholderText="Enter subscription/vendor name (e.g., Netflix, Amazon, Supplier Ltd)"
+                     PlaceholderText="e.g., GitHub Team, Azure DevOps, Netflix Premium"
                      Style="{StaticResource ModernTextBoxStyle}" />
         </StackPanel>
 
+        <!-- Vendor -->
         <StackPanel Spacing="4">
-            <TextBlock Text="Category *"
+            <TextBlock Text="Vendor *"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <ComboBox x:Name="TypeComboBox"
-                      ItemsSource="{x:Bind ExpenseTypes, Mode=OneWay}"
+            <ComboBox x:Name="VendorComboBox"
+                      ItemsSource="{x:Bind Vendors, Mode=OneWay}"
                       DisplayMemberPath="Name"
                       HorizontalAlignment="Stretch"
-                      PlaceholderText="Select category (e.g., OTT &amp; Streaming, IT &amp; Software, Shopping)"
+                      PlaceholderText="Select vendor"
                       Style="{StaticResource ModernComboBoxStyle}"/>
         </StackPanel>
 
+        <!-- Plan -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Plan"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBox x:Name="PlanTextBox"
+                     PlaceholderText="e.g., Team, Enterprise, Premium"
+                     Style="{StaticResource ModernTextBoxStyle}" />
+        </StackPanel>
+
+        <!-- Amount and Currency -->
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="Amount"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <NumberBox x:Name="AmountNumberBox"
+                          PlaceholderText="0.00"
+                          Minimum="0"
+                          SpinButtonPlacementMode="Compact"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="4" MinWidth="100">
+                <TextBlock Text="Currency"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <ComboBox x:Name="CurrencyComboBox"
+                          HorizontalAlignment="Stretch"
+                          Style="{StaticResource ModernComboBoxStyle}">
+                    <ComboBoxItem Content="INR" Tag="INR"/>
+                    <ComboBoxItem Content="USD" Tag="USD"/>
+                    <ComboBoxItem Content="EUR" Tag="EUR"/>
+                    <ComboBoxItem Content="GBP" Tag="GBP"/>
+                    <ComboBoxItem Content="JPY" Tag="JPY"/>
+                    <ComboBoxItem Content="AUD" Tag="AUD"/>
+                    <ComboBoxItem Content="CAD" Tag="CAD"/>
+                    <ComboBoxItem Content="CHF" Tag="CHF"/>
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <!-- Billing Cycle -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Billing Cycle"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <ComboBox x:Name="BillingCycleComboBox"
+                      HorizontalAlignment="Stretch"
+                      Style="{StaticResource ModernComboBoxStyle}">
+                <ComboBoxItem Content="Monthly" Tag="Monthly"/>
+                <ComboBoxItem Content="Quarterly" Tag="Quarterly"/>
+                <ComboBoxItem Content="Half-Yearly" Tag="HalfYearly"/>
+                <ComboBoxItem Content="Yearly" Tag="Yearly"/>
+                <ComboBoxItem Content="One-Time" Tag="OneTime"/>
+                <ComboBoxItem Content="Custom" Tag="Custom"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Reference -->
         <StackPanel Spacing="4">
             <TextBlock Text="Reference"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
             <TextBox x:Name="ReferenceTextBox"
-                     PlaceholderText="Account ID, email, or vendor code (optional)"
+                     PlaceholderText="Account ID, subscription number, etc."
                      Style="{StaticResource ModernTextBoxStyle}" />
         </StackPanel>
 
+        <!-- Notes -->
         <StackPanel Spacing="4">
-            <TextBlock Text="Contact *"
+            <TextBlock Text="Notes"
                        Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <ComboBox x:Name="ContactComboBox"
-                      ItemsSource="{x:Bind Contacts, Mode=OneWay}"
-                      DisplayMemberPath="Name"
-                      HorizontalAlignment="Stretch"
-                      Style="{StaticResource ModernComboBoxStyle}" />
+            <TextBox x:Name="NotesTextBox"
+                     PlaceholderText="Additional notes (optional)"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="60"
+                     Style="{StaticResource ModernTextBoxStyle}" />
         </StackPanel>
 
         <TextBlock Text="* Required fields"
                    Style="{StaticResource CaptionTextBlockStyle}"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-    </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

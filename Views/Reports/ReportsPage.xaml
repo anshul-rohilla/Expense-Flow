@@ -10,7 +10,6 @@
     <Grid x:Name="RootGrid">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
-                <!-- Compact -->
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0" />
@@ -27,15 +26,18 @@
                         <Setter Target="Card3.(Grid.Column)" Value="0"/>
                         <Setter Target="Card3.(Grid.Row)" Value="2"/>
                         <Setter Target="SummaryGrid.RowSpacing" Value="12"/>
-                        <Setter Target="ConfigGrid.ColumnDefinitions[0].Width" Value="*"/>
-                        <Setter Target="ConfigGrid.ColumnDefinitions[1].Width" Value="0"/>
-                        <Setter Target="GenerateButton.(Grid.Column)" Value="0"/>
-                        <Setter Target="GenerateButton.(Grid.Row)" Value="1"/>
-                        <Setter Target="ConfigGrid.RowSpacing" Value="12"/>
+                        <Setter Target="InsightGrid.ColumnDefinitions[0].Width" Value="*"/>
+                        <Setter Target="InsightGrid.ColumnDefinitions[1].Width" Value="0"/>
+                        <Setter Target="InsightGrid.ColumnDefinitions[2].Width" Value="0"/>
+                        <Setter Target="Insight1.(Grid.Column)" Value="0"/>
+                        <Setter Target="Insight1.(Grid.Row)" Value="0"/>
+                        <Setter Target="Insight2.(Grid.Column)" Value="0"/>
+                        <Setter Target="Insight2.(Grid.Row)" Value="1"/>
+                        <Setter Target="Insight3.(Grid.Column)" Value="0"/>
+                        <Setter Target="Insight3.(Grid.Row)" Value="2"/>
+                        <Setter Target="InsightGrid.RowSpacing" Value="12"/>
                     </VisualState.Setters>
                 </VisualState>
-                
-                <!-- Medium -->
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="640" />
@@ -52,15 +54,8 @@
                         <Setter Target="Card3.(Grid.Column)" Value="0"/>
                         <Setter Target="Card3.(Grid.Row)" Value="1"/>
                         <Setter Target="SummaryGrid.RowSpacing" Value="16"/>
-                        <Setter Target="ConfigGrid.ColumnDefinitions[0].Width" Value="*"/>
-                        <Setter Target="ConfigGrid.ColumnDefinitions[1].Width" Value="Auto"/>
-                        <Setter Target="GenerateButton.(Grid.Column)" Value="1"/>
-                        <Setter Target="GenerateButton.(Grid.Row)" Value="0"/>
-                        <Setter Target="ConfigGrid.RowSpacing" Value="0"/>
                     </VisualState.Setters>
                 </VisualState>
-                
-                <!-- Large -->
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="1007" />
@@ -82,232 +77,462 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <ScrollViewer>
+            <StackPanel Spacing="20">
 
-        <!-- Header Section -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+                <!-- Header -->
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Spacing="8">
-                <TextBlock Text="Reports" 
-                         Style="{StaticResource PageTitleTextStyle}"/>
-                <TextBlock Text="Analyze your spending patterns and generate insights"
-                         Style="{StaticResource BodyTextBlockStyle}"
-                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                         TextWrapping="Wrap"/>
-            </StackPanel>
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <TextBlock Text="Reports &amp; Analytics"
+                                 Style="{StaticResource PageTitleTextStyle}"/>
+                        <TextBlock Text="Deep insights into your spending patterns, vendors, and categories"
+                                 Style="{StaticResource BodyTextBlockStyle}"
+                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                 TextWrapping="Wrap"/>
+                    </StackPanel>
 
-            <Button Grid.Column="1"
-                  Content="Export Report" 
-                  Style="{StaticResource PrimaryButtonStyle}"
-                  VerticalAlignment="Center"
-                  Click="ExportReport_Click">
-                <Button.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="E" Modifiers="Control"/>
-                </Button.KeyboardAccelerators>
-            </Button>
-        </Grid>
-
-        <!-- Report Configuration -->
-        <Border Grid.Row="1"
-              Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
-              CornerRadius="12"
-              Padding="16"
-              Margin="0,0,0,16"
-              Translation="0,0,8">
-            <Grid x:Name="ConfigGrid" ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <ComboBox Grid.Column="0" Grid.Row="0"
-                        x:Name="ReportTypeComboBox"
-                        PlaceholderText="Select Report Type"
-                        SelectedIndex="0"
-                        SelectionChanged="ReportType_SelectionChanged"
-                        HorizontalAlignment="Stretch"
-                        Style="{StaticResource ModernComboBoxStyle}">
-                    <ComboBoxItem Content="Overall Summary" Tag="Overall"/>
-                    <ComboBoxItem Content="By Project" Tag="ByProject"/>
-                    <ComboBoxItem Content="By Project Group" Tag="ByProjectGroup"/>
-                    <ComboBoxItem Content="By Payment Mode" Tag="ByPaymentMode"/>
-                    <ComboBoxItem Content="By Contact" Tag="ByContact"/>
-                </ComboBox>
-
-                <Button x:Name="GenerateButton"
-                      Grid.Column="1" Grid.Row="0"
-                      Content="Generate Report"
-                      Click="GenerateReport_Click"
-                      Style="{StaticResource PrimaryButtonStyle}"/>
-            </Grid>
-        </Border>
-
-        <!-- Summary Cards -->
-        <Grid x:Name="SummaryGrid" Grid.Row="2" Margin="0,0,0,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnSpacing>16</Grid.ColumnSpacing>
-            <Grid.RowSpacing>0</Grid.RowSpacing>
-
-            <!-- Total Amount Card -->
-            <Border x:Name="Card1"
-                  Grid.Column="0" Grid.Row="0"
-                  Background="{StaticResource PrimaryGradientBrush}"
-                  Style="{StaticResource GradientCardStyle}"
-                  Translation="0,0,16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Total Amount"
-                             Foreground="White"
-                             Style="{StaticResource StatLabelTextStyle}"
-                             Opacity="0.9"/>
-                    <TextBlock x:Name="TotalAmountText"
-                             Foreground="White"
-                             FontSize="32"
-                             FontWeight="Bold"
-                             Text="$0.00"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Transaction Count Card -->
-            <Border x:Name="Card2"
-                  Grid.Column="1" Grid.Row="0"
-                  Background="{StaticResource SuccessGradientBrush}"
-                  Style="{StaticResource GradientCardStyle}"
-                  Translation="0,0,16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Transactions"
-                             Foreground="White"
-                             Style="{StaticResource StatLabelTextStyle}"
-                             Opacity="0.9"/>
-                    <TextBlock x:Name="TransactionCountText"
-                             Foreground="White"
-                             FontSize="32"
-                             FontWeight="Bold"
-                             Text="0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Average Amount Card -->
-            <Border x:Name="Card3"
-                  Grid.Column="2" Grid.Row="0"
-                  Background="{StaticResource WarningGradientBrush}"
-                  Style="{StaticResource GradientCardStyle}"
-                  Translation="0,0,16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Average"
-                             Foreground="White"
-                             Style="{StaticResource StatLabelTextStyle}"
-                             Opacity="0.9"/>
-                    <TextBlock x:Name="AverageAmountText"
-                             Foreground="White"
-                             FontSize="32"
-                             FontWeight="Bold"
-                             Text="$0.00"/>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <!-- Report Content -->
-        <Grid Grid.Row="3">
-            <!-- Loading Indicator -->
-            <ProgressRing x:Name="LoadingRing"
-                        IsActive="False"
-                        Width="50" Height="50"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Visibility="Collapsed"/>
-
-            <!-- Empty State -->
-            <Border x:Name="EmptyState"
-                  Style="{StaticResource StatCardStyle}"
-                  Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
-                  Translation="0,0,16">
-                <StackPanel Spacing="20" Padding="48">
-                    <Border Background="{StaticResource PurpleGradientBrush}"
-                          Width="80" Height="80"
-                          CornerRadius="40"
-                          HorizontalAlignment="Center">
-                        <FontIcon Glyph="&#xE9D9;" 
-                                FontSize="40" 
-                                Foreground="White"/>
-                    </Border>
-                    <TextBlock Text="No report data"
-                             Style="{StaticResource SectionTitleTextStyle}"
-                             HorizontalAlignment="Center"/>
-                    <TextBlock Text="Select a report type and click 'Generate Report' to view data"
-                             Style="{StaticResource BodyTextBlockStyle}"
-                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                             HorizontalAlignment="Center"
-                             TextWrapping="Wrap"
-                             TextAlignment="Center"
-                             MaxWidth="400"/>
-                    <Button Content="Generate Report"
+                    <Button Grid.Column="1"
                           Style="{StaticResource PrimaryButtonStyle}"
-                          HorizontalAlignment="Center"
-                          Click="GenerateReport_Click"/>
-                </StackPanel>
-            </Border>
+                          VerticalAlignment="Center"
+                          Click="ExportReport_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xEDE1;" FontSize="16"/>
+                            <TextBlock Text="Export"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
 
-            <!-- Report Data List -->
-            <ScrollViewer x:Name="ReportDataScroller" Visibility="Collapsed">
+                <!-- Configuration -->
                 <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
-                      Style="{StaticResource StatCardStyle}"
-                      Translation="0,0,16">
-                    <StackPanel Spacing="16">
-                        <TextBlock Text="Report Data"
-                                 Style="{StaticResource SectionTitleTextStyle}"/>
-                        
-                        <ItemsRepeater x:Name="ReportDataRepeater">
-                            <ItemsRepeater.Layout>
-                                <StackLayout Spacing="8"/>
-                            </ItemsRepeater.Layout>
-                            <ItemsRepeater.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                                          CornerRadius="8"
-                                          Padding="16">
-                                        <Grid ColumnSpacing="16">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
+                      CornerRadius="16"
+                      Padding="20"
+                      Translation="0,0,12">
+                    <Border.Shadow>
+                        <ThemeShadow/>
+                    </Border.Shadow>
+                    <Grid RowSpacing="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Column="0"
-                                                     Text="Category"
-                                                     Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                            <TextBlock Grid.Column="1"
-                                                     Text="$0.00"
-                                                     Style="{StaticResource BodyStrongTextBlockStyle}"
-                                                     Foreground="{StaticResource PrimaryBrush}"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsRepeater.ItemTemplate>
-                        </ItemsRepeater>
+                        <Grid Grid.Row="0" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox Grid.Column="0"
+                                    x:Name="ReportTypeComboBox"
+                                    PlaceholderText="Select Report Type"
+                                    SelectedIndex="0"
+                                    SelectionChanged="ReportType_SelectionChanged"
+                                    HorizontalAlignment="Stretch"
+                                    Style="{StaticResource ModernComboBoxStyle}">
+                                <ComboBoxItem Content="Overall Summary" Tag="Overall"/>
+                                <ComboBoxItem Content="By Project" Tag="ByProject"/>
+                                <ComboBoxItem Content="By Project Group" Tag="ByProjectGroup"/>
+                                <ComboBoxItem Content="By Payment Mode" Tag="ByPaymentMode"/>
+                                <ComboBoxItem Content="By Vendor" Tag="ByVendor"/>
+                                <ComboBoxItem Content="By Expense Type" Tag="ByExpenseType"/>
+                                <ComboBoxItem Content="By Contact" Tag="ByContact"/>
+                            </ComboBox>
+
+                            <Button Grid.Column="1"
+                                  Click="GenerateReport_Click"
+                                  Style="{StaticResource PrimaryButtonStyle}"
+                                  MinWidth="160">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="16"/>
+                                    <TextBlock Text="Generate"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <Grid Grid.Row="1" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="From"
+                                     VerticalAlignment="Center"
+                                     FontWeight="SemiBold"
+                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <DatePicker Grid.Column="1"
+                                      x:Name="StartDatePicker"
+                                      HorizontalAlignment="Stretch"
+                                      DateChanged="StartDate_Changed"/>
+                            <TextBlock Grid.Column="2" Text="To"
+                                     VerticalAlignment="Center"
+                                     FontWeight="SemiBold"
+                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <DatePicker Grid.Column="3"
+                                      x:Name="EndDatePicker"
+                                      HorizontalAlignment="Stretch"
+                                      DateChanged="EndDate_Changed"/>
+                            <TextBlock Grid.Column="4"
+                                     x:Name="DateRangeText"
+                                     Text=""
+                                     VerticalAlignment="Center"
+                                     FontSize="12"
+                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                     FontStyle="Italic"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Summary Cards -->
+                <Grid x:Name="SummaryGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnSpacing>16</Grid.ColumnSpacing>
+                    <Grid.RowSpacing>0</Grid.RowSpacing>
+
+                    <!-- Total Amount -->
+                    <Border x:Name="Card1"
+                          Grid.Column="0" Grid.Row="0"
+                          Background="{StaticResource PrimaryGradientBrush}"
+                          CornerRadius="16"
+                          Padding="24"
+                          MinHeight="130"
+                          Translation="0,0,16">
+                        <Border.Shadow>
+                            <ThemeShadow/>
+                        </Border.Shadow>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Total Spent"
+                                         Foreground="White"
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Opacity="0.85"/>
+                                <TextBlock x:Name="TotalAmountText"
+                                         Foreground="White"
+                                         FontSize="28"
+                                         FontWeight="Bold"
+                                         Text="0.00"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                  Background="#30FFFFFF"
+                                  Width="52" Height="52"
+                                  CornerRadius="16"
+                                  VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE8C7;" Foreground="White" FontSize="24"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Transactions -->
+                    <Border x:Name="Card2"
+                          Grid.Column="1" Grid.Row="0"
+                          Background="{StaticResource SuccessGradientBrush}"
+                          CornerRadius="16"
+                          Padding="24"
+                          MinHeight="130"
+                          Translation="0,0,16">
+                        <Border.Shadow>
+                            <ThemeShadow/>
+                        </Border.Shadow>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Transactions"
+                                         Foreground="White"
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Opacity="0.85"/>
+                                <TextBlock x:Name="TransactionCountText"
+                                         Foreground="White"
+                                         FontSize="28"
+                                         FontWeight="Bold"
+                                         Text="0"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                  Background="#30FFFFFF"
+                                  Width="52" Height="52"
+                                  CornerRadius="16"
+                                  VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE8EF;" Foreground="White" FontSize="24"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Average -->
+                    <Border x:Name="Card3"
+                          Grid.Column="2" Grid.Row="0"
+                          Background="{StaticResource WarningGradientBrush}"
+                          CornerRadius="16"
+                          Padding="24"
+                          MinHeight="130"
+                          Translation="0,0,16">
+                        <Border.Shadow>
+                            <ThemeShadow/>
+                        </Border.Shadow>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Average"
+                                         Foreground="White"
+                                         FontSize="13"
+                                         FontWeight="SemiBold"
+                                         Opacity="0.85"/>
+                                <TextBlock x:Name="AverageAmountText"
+                                         Foreground="White"
+                                         FontSize="28"
+                                         FontWeight="Bold"
+                                         Text="0.00"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                  Background="#30FFFFFF"
+                                  Width="52" Height="52"
+                                  CornerRadius="16"
+                                  VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE9D9;" Foreground="White" FontSize="24"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Insight Cards -->
+                <Grid x:Name="InsightsPanel" Visibility="Collapsed">
+                    <Grid x:Name="InsightGrid" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.RowSpacing>0</Grid.RowSpacing>
+
+                        <!-- Highest Expense -->
+                        <Border x:Name="Insight1"
+                              Grid.Column="0" Grid.Row="0"
+                              Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                              CornerRadius="16"
+                              Padding="20"
+                              MinHeight="110"
+                              Translation="0,0,8">
+                            <Border.Shadow>
+                                <ThemeShadow/>
+                            </Border.Shadow>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{StaticResource ErrorGradientBrush}"
+                                      Width="44" Height="44"
+                                      CornerRadius="12"
+                                      Margin="0,0,14,0"
+                                      VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE70E;" Foreground="White" FontSize="20"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Highest Expense"
+                                             FontSize="11"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                             FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="HighestExpenseName"
+                                             FontSize="13"
+                                             FontWeight="Bold"
+                                             TextTrimming="CharacterEllipsis"
+                                             MaxLines="1"
+                                             Text="N/A"/>
+                                    <TextBlock x:Name="HighestExpenseAmount"
+                                             FontSize="15"
+                                             FontWeight="Bold"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             Text="0.00"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Lowest Expense -->
+                        <Border x:Name="Insight2"
+                              Grid.Column="1" Grid.Row="0"
+                              Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                              CornerRadius="16"
+                              Padding="20"
+                              MinHeight="110"
+                              Translation="0,0,8">
+                            <Border.Shadow>
+                                <ThemeShadow/>
+                            </Border.Shadow>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{StaticResource SuccessGradientBrush}"
+                                      Width="44" Height="44"
+                                      CornerRadius="12"
+                                      Margin="0,0,14,0"
+                                      VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE70D;" Foreground="White" FontSize="20"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Lowest Expense"
+                                             FontSize="11"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                             FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="LowestExpenseName"
+                                             FontSize="13"
+                                             FontWeight="Bold"
+                                             TextTrimming="CharacterEllipsis"
+                                             MaxLines="1"
+                                             Text="N/A"/>
+                                    <TextBlock x:Name="LowestExpenseAmount"
+                                             FontSize="15"
+                                             FontWeight="Bold"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             Text="0.00"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Top Category -->
+                        <Border x:Name="Insight3"
+                              Grid.Column="2" Grid.Row="0"
+                              Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                              CornerRadius="16"
+                              Padding="20"
+                              MinHeight="110"
+                              Translation="0,0,8">
+                            <Border.Shadow>
+                                <ThemeShadow/>
+                            </Border.Shadow>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{StaticResource PurpleGradientBrush}"
+                                      Width="44" Height="44"
+                                      CornerRadius="12"
+                                      Margin="0,0,14,0"
+                                      VerticalAlignment="Center">
+                                    <FontIcon Glyph="&#xE8CB;" Foreground="White" FontSize="20"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Top Category"
+                                             FontSize="11"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                             FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="TopCategoryName"
+                                             FontSize="13"
+                                             FontWeight="Bold"
+                                             TextTrimming="CharacterEllipsis"
+                                             MaxLines="1"
+                                             Text="N/A"/>
+                                    <TextBlock x:Name="TopCategoryCount"
+                                             FontSize="12"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                             Text=""/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Loading -->
+                <ProgressRing x:Name="LoadingRing"
+                            IsActive="False"
+                            Width="50" Height="50"
+                            HorizontalAlignment="Center"
+                            Visibility="Collapsed"/>
+
+                <!-- Empty State -->
+                <Border x:Name="EmptyState"
+                      Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                      CornerRadius="16"
+                      Padding="48"
+                      Translation="0,0,16">
+                    <Border.Shadow>
+                        <ThemeShadow/>
+                    </Border.Shadow>
+                    <StackPanel Spacing="20" HorizontalAlignment="Center">
+                        <Border Background="{StaticResource PurpleGradientBrush}"
+                              Width="80" Height="80"
+                              CornerRadius="40"
+                              HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE9D9;"
+                                    FontSize="40"
+                                    Foreground="White"/>
+                        </Border>
+                        <TextBlock Text="No report data"
+                                 Style="{StaticResource SectionTitleTextStyle}"
+                                 HorizontalAlignment="Center"/>
+                        <TextBlock Text="Select a report type, set your date range, and click Generate to view detailed analytics"
+                                 Style="{StaticResource BodyTextBlockStyle}"
+                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                 HorizontalAlignment="Center"
+                                 TextWrapping="Wrap"
+                                 TextAlignment="Center"
+                                 MaxWidth="420"/>
+                        <Button Content="Generate Report"
+                              Style="{StaticResource PrimaryButtonStyle}"
+                              HorizontalAlignment="Center"
+                              Click="GenerateReport_Click"/>
                     </StackPanel>
                 </Border>
-            </ScrollViewer>
-        </Grid>
+
+                <!-- Report Data Breakdown -->
+                <ScrollViewer x:Name="ReportDataScroller" Visibility="Collapsed"
+                            MaxHeight="600">
+                    <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                          CornerRadius="16"
+                          Padding="24"
+                          Translation="0,0,16">
+                        <Border.Shadow>
+                            <ThemeShadow/>
+                        </Border.Shadow>
+                        <StackPanel Spacing="16">
+                            <Grid>
+                                <TextBlock Text="Breakdown"
+                                         Style="{StaticResource SectionTitleTextStyle}"/>
+                                <TextBlock HorizontalAlignment="Right"
+                                         VerticalAlignment="Center"
+                                         FontSize="12"
+                                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                         Text="Sorted by amount (highest first)"/>
+                            </Grid>
+
+                            <StackPanel x:Name="ReportDataContainer" Spacing="8"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>

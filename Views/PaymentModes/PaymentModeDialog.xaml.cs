@@ -34,6 +34,7 @@ public sealed partial class PaymentModeDialog : ContentDialog
             LastFourDigitsTextBox.Text = paymentMode.LastFourDigits ?? string.Empty;
             BalanceTextBox.Text = paymentMode.Balance?.ToString() ?? string.Empty;
             UpiIdTextBox.Text = paymentMode.UpiId ?? string.Empty;
+            RequiresSettlementCheckBox.IsChecked = paymentMode.RequiresSettlement;
             
             // Show appropriate fields based on type
             UpdateFieldVisibility();
@@ -58,7 +59,9 @@ public sealed partial class PaymentModeDialog : ContentDialog
         try
         {
             var contactService = App.Host!.Services.GetRequiredService<Services.IContactService>();
-            var result = await contactService.GetAllContactsAsync();
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            var orgId = orgService.GetCurrentOrganizationId();
+            var result = await contactService.GetAllContactsAsync(orgId);
             
             if (result.Success && result.Data != null)
             {
@@ -220,9 +223,16 @@ public sealed partial class PaymentModeDialog : ContentDialog
         }
 
         // All validations passed, set the properties
+        if (!_isEditMode)
+        {
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            PaymentMode.OrganizationId = orgService.GetCurrentOrganizationId();
+        }
+
         PaymentMode.Name = NameTextBox.Text.Trim();
         PaymentMode.Type = selectedType;
         PaymentMode.ContactId = contact.Id;
+        PaymentMode.RequiresSettlement = RequiresSettlementCheckBox.IsChecked == true;
 
         // Set type-specific properties
         switch (selectedType)

@@ -128,20 +128,20 @@
                            Style="{StaticResource BodyStrongTextBlockStyle}"
                            Margin="0,0,8,0" />
 
-                <Button Content="All" Tag="All"
+                <Button x:Name="FilterAllButton" Content="All" Tag="All"
                         Click="FilterByType_Click"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Padding="16,8" />
 
-                <Button Content="Card" Tag="Card"
+                <Button x:Name="FilterCardButton" Content="Card" Tag="Card"
                         Click="FilterByType_Click"
                         Padding="16,8" />
 
-                <Button Content="Cash" Tag="Cash"
+                <Button x:Name="FilterCashButton" Content="Cash" Tag="Cash"
                         Click="FilterByType_Click"
                         Padding="16,8" />
 
-                <Button Content="UPI" Tag="UPI"
+                <Button x:Name="FilterUpiButton" Content="UPI" Tag="UPI"
                         Click="FilterByType_Click"
                         Padding="16,8" />
             </StackPanel>

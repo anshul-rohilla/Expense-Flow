@@ -64,4 +64,14 @@ public class Repository<T> : IRepository<T> where T : class
     {
         return await _dbSet.AnyAsync(predicate);
     }
+
+    public virtual async Task<IEnumerable<T>> GetAllWithIncludeAsync<TProperty>(Expression<Func<T, TProperty>> includeProperty)
+    {
+        return await _dbSet.Include(includeProperty).ToListAsync();
+    }
+
+    public virtual async Task<IEnumerable<T>> FindWithIncludeAsync<TProperty>(Expression<Func<T, bool>> predicate, Expression<Func<T, TProperty>> includeProperty)
+    {
+        return await _dbSet.Include(includeProperty).Where(predicate).ToListAsync();
+    }
 }

@@ -19,7 +19,7 @@ public class PaymentModeDisplayConverter : IValueConverter
 
                 return paymentMode.Type switch
                 {
-                    PaymentModeType.Card => $"•••• •••• •••• {paymentMode.LastFourDigits ?? "****"}",
+                    PaymentModeType.Card => $"XXXX  XXXX  XXXX {paymentMode.LastFourDigits ?? "****"}",
                     PaymentModeType.UPI => paymentMode.UpiId ?? "Not Set",
                     PaymentModeType.Cash => paymentMode.Balance.HasValue ? $"{symbol}{paymentMode.Balance.Value:N2}" : $"{symbol}0.00",
                     _ => "N/A"
@@ -30,7 +30,7 @@ public class PaymentModeDisplayConverter : IValueConverter
                 System.Diagnostics.Debug.WriteLine($"PaymentModeDisplayConverter error: {ex.Message}");
                 return paymentMode.Type switch
                 {
-                    PaymentModeType.Card => $"•••• •••• •••• {paymentMode.LastFourDigits ?? "****"}",
+                    PaymentModeType.Card => $"XXXX  XXXX  XXXX {paymentMode.LastFourDigits ?? "****"}",
                     PaymentModeType.UPI => paymentMode.UpiId ?? "Not Set",
                     PaymentModeType.Cash => paymentMode.Balance.HasValue ? $"${paymentMode.Balance.Value:N2}" : "$0.00",
                     _ => "N/A"

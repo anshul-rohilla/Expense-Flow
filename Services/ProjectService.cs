@@ -11,6 +11,7 @@ namespace Expense_Flow.Services;
 public interface IProjectService
 {
     Task<ServiceResult<IEnumerable<Project>>> GetAllProjectsAsync(bool includeArchived = false);
+    Task<ServiceResult<IEnumerable<Project>>> GetProjectsByOrganizationAsync(int organizationId, bool includeArchived = false);
     Task<ServiceResult<Project>> GetProjectByIdAsync(int id);
     Task<ServiceResult<Project>> GetDefaultProjectAsync();
     Task<ServiceResult<Project>> CreateProjectAsync(Project project);
@@ -18,7 +19,7 @@ public interface IProjectService
     Task<ServiceResult<bool>> DeleteProjectAsync(int id);
     Task<ServiceResult<bool>> ArchiveProjectAsync(int id);
     Task<ServiceResult<bool>> UnarchiveProjectAsync(int id);
-    Task<ServiceResult<bool>> ProjectExistsAsync(string name, int? excludeId = null);
+    Task<ServiceResult<bool>> ProjectExistsAsync(string name, int organizationId, int? excludeId = null);
 }
 
 public class ProjectService : IProjectService
@@ -37,8 +38,24 @@ public class ProjectService : IProjectService
         try
         {
             var projects = includeArchived
-                ? await _projectRepository.GetAllAsync()
-                : await _projectRepository.FindAsync(p => !p.IsArchived);
+                ? await _projectRepository.GetAllWithIncludeAsync(p => p.Expenses)
+                : await _projectRepository.FindWithIncludeAsync(p => !p.IsArchived, p => p.Expenses);
+
+            return ServiceResult<IEnumerable<Project>>.SuccessResult(projects.OrderBy(p => p.Name));
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<IEnumerable<Project>>.FailureResult($"Error retrieving projects: {ex.Message}");
+        }
+    }
+
+    public async Task<ServiceResult<IEnumerable<Project>>> GetProjectsByOrganizationAsync(int organizationId, bool includeArchived = false)
+    {
+        try
+        {
+            var projects = includeArchived
+                ? await _projectRepository.FindAsync(p => p.OrganizationId == organizationId)
+                : await _projectRepository.FindAsync(p => p.OrganizationId == organizationId && !p.IsArchived);
 
             return ServiceResult<IEnumerable<Project>>.SuccessResult(projects.OrderBy(p => p.Name));
         }
@@ -136,6 +153,7 @@ public class ProjectService : IProjectService
             existingProject.Description = project.Description;
             existingProject.DefaultPaymentModeId = project.DefaultPaymentModeId;
             existingProject.MonthlyBudget = project.MonthlyBudget;
+            existingProject.Currency = project.Currency;
             existingProject.ModifiedAt = DateTime.Now;
             existingProject.ModifiedBy = _userService.GetCurrentUsername();
 
@@ -229,12 +247,13 @@ public class ProjectService : IProjectService
         }
     }
 
-    public async Task<ServiceResult<bool>> ProjectExistsAsync(string name, int? excludeId = null)
+    public async Task<ServiceResult<bool>> ProjectExistsAsync(string name, int organizationId, int? excludeId = null)
     {
         try
         {
             var exists = await _projectRepository.ExistsAsync(p =>
                 p.Name.ToLower() == name.ToLower() &&
+                p.OrganizationId == organizationId &&
                 (!excludeId.HasValue || p.Id != excludeId.Value));
 
             return ServiceResult<bool>.SuccessResult(exists);
@@ -254,7 +273,12 @@ public class ProjectService : IProjectService
         errors.AddRange(ValidationHelper.ValidateMaxLength(project.Description, 1000, "Description"));
         errors.AddRange(ValidationHelper.ValidatePositive(project.MonthlyBudget, "Monthly Budget"));
 
-        var existsResult = await ProjectExistsAsync(project.Name, excludeId);
+        if (project.OrganizationId <= 0)
+        {
+            errors.Add("Organization is required.");
+        }
+
+        var existsResult = await ProjectExistsAsync(project.Name, project.OrganizationId, excludeId);
         if (existsResult.Success && existsResult.Data)
         {
             errors.Add($"A project with the name '{project.Name}' already exists.");

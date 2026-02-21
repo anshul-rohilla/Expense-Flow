@@ -54,6 +54,8 @@ public class NavigationService : INavigationService
             "Contacts" => typeof(Views.Contacts.ContactsPage),
             "PaymentModes" => typeof(Views.PaymentModes.PaymentModesPage),
             "Subscriptions" => typeof(Views.Subscriptions.SubscriptionsPage),
+            "Vendors" => typeof(Views.Vendors.VendorsPage),
+            "Settlements" => typeof(Views.Settlements.SettlementsPage),
             "Reports" => typeof(Views.Reports.ReportsPage),
             "Settings" => typeof(Views.Settings.SettingsPage),
             _ => null

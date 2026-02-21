@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Expense_Flow.Data;
 using Expense_Flow.Models;
 using Expense_Flow.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Flow.Services;
 
@@ -12,7 +13,9 @@ public interface IExpenseService
 {
     Task<ServiceResult<IEnumerable<Expense>>> GetAllExpensesAsync();
     Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByProjectAsync(int projectId);
+    Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByVendorAsync(int vendorId);
     Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByDateRangeAsync(DateTime? startDate, DateTime? endDate);
+    Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByReimbursementStatusAsync(ReimbursementStatus status);
     Task<ServiceResult<Expense>> GetExpenseByIdAsync(int id);
     Task<ServiceResult<Expense>> CreateExpenseAsync(Expense expense);
     Task<ServiceResult<Expense>> UpdateExpenseAsync(Expense expense);
@@ -26,23 +29,29 @@ public class ExpenseService : IExpenseService
     private readonly IRepository<Project> _projectRepository;
     private readonly IRepository<Subscription> _subscriptionRepository;
     private readonly IRepository<ExpenseType> _expenseTypeRepository;
+    private readonly IRepository<Vendor> _vendorRepository;
     private readonly IUserService _userService;
     private readonly IFileStorageService _fileStorageService;
+    private readonly ExpenseFlowDbContext _dbContext;
 
     public ExpenseService(
         IRepository<Expense> expenseRepository,
         IRepository<Project> projectRepository,
         IRepository<Subscription> subscriptionRepository,
         IRepository<ExpenseType> expenseTypeRepository,
+        IRepository<Vendor> vendorRepository,
         IUserService userService,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        ExpenseFlowDbContext dbContext)
     {
         _expenseRepository = expenseRepository;
         _projectRepository = projectRepository;
         _subscriptionRepository = subscriptionRepository;
         _expenseTypeRepository = expenseTypeRepository;
+        _vendorRepository = vendorRepository;
         _userService = userService;
         _fileStorageService = fileStorageService;
+        _dbContext = dbContext;
     }
 
     public async Task<ServiceResult<IEnumerable<Expense>>> GetAllExpensesAsync()
@@ -73,26 +82,58 @@ public class ExpenseService : IExpenseService
         }
     }
 
+    public async Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByVendorAsync(int vendorId)
+    {
+        try
+        {
+            var expenses = await _expenseRepository.FindAsync(e => e.VendorId == vendorId);
+            return ServiceResult<IEnumerable<Expense>>.SuccessResult(
+                expenses.OrderByDescending(e => e.InvoiceDate ?? e.CreatedAt));
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<IEnumerable<Expense>>.FailureResult($"Error retrieving expenses: {ex.Message}");
+        }
+    }
+
     public async Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByDateRangeAsync(DateTime? startDate, DateTime? endDate)
     {
         try
         {
-            var expenses = await _expenseRepository.GetAllAsync();
+            var query = _dbContext.Expenses
+                .Include(e => e.Project)
+                .Include(e => e.PaymentMode)
+                .Include(e => e.Vendor)
+                .Include(e => e.ExpenseType)
+                .AsQueryable();
             
             if (startDate.HasValue)
             {
-                expenses = expenses.Where(e =>
-                    (e.InvoiceDate.HasValue && e.InvoiceDate.Value >= startDate.Value) ||
-                    (!e.InvoiceDate.HasValue && e.CreatedAt >= startDate.Value));
+                query = query.Where(e => e.PaymentDate >= startDate.Value);
             }
 
             if (endDate.HasValue)
             {
-                expenses = expenses.Where(e =>
-                    (e.InvoiceDate.HasValue && e.InvoiceDate.Value <= endDate.Value) ||
-                    (!e.InvoiceDate.HasValue && e.CreatedAt <= endDate.Value));
+                query = query.Where(e => e.PaymentDate <= endDate.Value);
             }
 
+            var expenses = await query
+                .OrderByDescending(e => e.PaymentDate)
+                .ToListAsync();
+
+            return ServiceResult<IEnumerable<Expense>>.SuccessResult(expenses);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<IEnumerable<Expense>>.FailureResult($"Error retrieving expenses: {ex.Message}");
+        }
+    }
+
+    public async Task<ServiceResult<IEnumerable<Expense>>> GetExpensesByReimbursementStatusAsync(ReimbursementStatus status)
+    {
+        try
+        {
+            var expenses = await _expenseRepository.FindAsync(e => e.ReimbursementStatus == status);
             return ServiceResult<IEnumerable<Expense>>.SuccessResult(
                 expenses.OrderByDescending(e => e.InvoiceDate ?? e.CreatedAt));
         }
@@ -178,6 +219,11 @@ public class ExpenseService : IExpenseService
             existingExpense.PaymentCurrency = expense.PaymentCurrency;
             existingExpense.PaymentDate = expense.PaymentDate;
             existingExpense.SubscriptionId = expense.SubscriptionId;
+            existingExpense.VendorId = expense.VendorId;
+            existingExpense.PaidById = expense.PaidById;
+            existingExpense.FundSource = expense.FundSource;
+            existingExpense.ReimbursementStatus = expense.ReimbursementStatus;
+            existingExpense.ReimbursedAmount = expense.ReimbursedAmount;
             existingExpense.ModifiedAt = DateTime.Now;
             existingExpense.ModifiedBy = _userService.GetCurrentUsername();
 
@@ -335,21 +381,41 @@ public class ExpenseService : IExpenseService
             errors.Add("Invalid Project. Project does not exist.");
         }
 
-        // Subscription/Vendor type validation
+        // Subscription validation
         if (expense.SubscriptionId.HasValue && expense.SubscriptionId.Value > 0)
         {
-            var subscription = await _subscriptionRepository.GetByIdAsync(expense.SubscriptionId.Value);
-            if (subscription != null && expense.ExpenseTypeId > 0)
+            var subscriptionExists = await _subscriptionRepository.ExistsAsync(s => s.Id == expense.SubscriptionId.Value);
+            if (!subscriptionExists)
             {
-                var expenseType = await _expenseTypeRepository.GetByIdAsync(expense.ExpenseTypeId);
-                if (expenseType != null && !string.IsNullOrEmpty(subscription.Type))
-                {
-                    if (subscription.Type != expenseType.Name)
-                    {
-                        errors.Add($"Subscription/Vendor type '{subscription.Type}' does not match Expense Type '{expenseType.Name}'.");
-                    }
-                }
+                errors.Add("Invalid Subscription. Subscription does not exist.");
             }
+        }
+
+        // Vendor validation
+        if (expense.VendorId.HasValue && expense.VendorId.Value > 0)
+        {
+            var vendorExists = await _vendorRepository.ExistsAsync(v => v.Id == expense.VendorId.Value && !v.IsArchived);
+            if (!vendorExists)
+            {
+                errors.Add("Invalid Vendor. Vendor does not exist or is archived.");
+            }
+        }
+
+        // Reimbursement validation
+        if (expense.FundSource == FundSource.Personal && expense.ReimbursementStatus == ReimbursementStatus.NotApplicable)
+        {
+            // Auto-set to Pending if personal expense
+            expense.ReimbursementStatus = ReimbursementStatus.Pending;
+        }
+
+        if (expense.ReimbursedAmount < 0)
+        {
+            errors.Add("Reimbursed Amount cannot be negative.");
+        }
+
+        if (expense.ReimbursedAmount > expense.Amount)
+        {
+            errors.Add("Reimbursed Amount cannot exceed the expense Amount.");
         }
 
         return errors;

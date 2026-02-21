@@ -9,6 +9,10 @@ public class ExpenseType
     public int Id { get; set; }
 
     [Required]
+    public int OrganizationId { get; set; }
+    public Organization Organization { get; set; } = null!;
+
+    [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
 

@@ -100,6 +100,108 @@ public sealed partial class SettingsPage : Page
                 DatabasePathText.Text = $"Error: {ex.Message}";
             }
         }
+
+        // Load organization details
+        LoadOrganizationAsync();
+    }
+
+    private async void LoadOrganizationAsync()
+    {
+        try
+        {
+            var orgService = App.Host!.Services.GetRequiredService<IOrganizationService>();
+            var result = await orgService.GetDefaultOrganizationAsync();
+            if (result.Success && result.Data != null)
+            {
+                OrgNameTextBox.Text = result.Data.Name;
+                OrgDescriptionTextBox.Text = result.Data.Description ?? string.Empty;
+                OrgCurrencyTextBox.Text = result.Data.DefaultCurrency ?? "INR";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading organization: {ex.Message}");
+        }
+    }
+
+    private async void SaveOrgName_Click(object sender, RoutedEventArgs e)
+    {
+        var orgName = OrgNameTextBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(orgName))
+        {
+            var errorDialog = new ContentDialog
+            {
+                Title = "Error",
+                Content = "Organization name cannot be empty.",
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await errorDialog.ShowAsync();
+            return;
+        }
+
+        try
+        {
+            var orgService = App.Host!.Services.GetRequiredService<IOrganizationService>();
+            var getResult = await orgService.GetDefaultOrganizationAsync();
+            if (getResult.Success && getResult.Data != null)
+            {
+                var org = getResult.Data;
+                org.Name = orgName;
+                org.Description = string.IsNullOrWhiteSpace(OrgDescriptionTextBox.Text) ? null : OrgDescriptionTextBox.Text.Trim();
+                
+                var updateResult = await orgService.UpdateOrganizationAsync(org);
+                if (updateResult.Success)
+                {
+                    // Update title bar org name on Shell page
+                    if (this.XamlRoot?.Content is Microsoft.UI.Xaml.Controls.Frame frame &&
+                        frame.Parent is Microsoft.UI.Xaml.Controls.NavigationView navView &&
+                        navView.Parent is Grid grid &&
+                        grid.Parent is Page shellPage)
+                    {
+                        // Try to find OrgNameText on the shell page
+                        try
+                        {
+                            var orgNameText = (shellPage as Shell.ShellPage)?.FindName("OrgNameText") as TextBlock;
+                            if (orgNameText != null)
+                                orgNameText.Text = orgName;
+                        }
+                        catch { }
+                    }
+
+                    var successDialog = new ContentDialog
+                    {
+                        Title = "Success",
+                        Content = "Organization updated successfully.",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await successDialog.ShowAsync();
+                }
+                else
+                {
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Error",
+                        Content = updateResult.GetErrorMessage(),
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new ContentDialog
+            {
+                Title = "Error",
+                Content = $"Failed to update organization: {ex.Message}",
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await errorDialog.ShowAsync();
+        }
     }
 
     private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)

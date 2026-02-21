@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using Expense_Flow.Models;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using Windows.System;
 
@@ -36,6 +37,12 @@ public sealed partial class ExpenseTypeDialog : ContentDialog
             ErrorTextBlock.Text = "Name is required.";
             ErrorTextBlock.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
             return;
+        }
+
+        if (!_isEditMode)
+        {
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            ExpenseType.OrganizationId = orgService.GetCurrentOrganizationId();
         }
 
         ExpenseType.Name = NameTextBox.Text.Trim();

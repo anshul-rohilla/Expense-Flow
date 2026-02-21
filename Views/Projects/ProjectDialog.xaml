@@ -64,6 +64,21 @@
                           Style="{StaticResource ModernComboBoxStyle}" />
             </StackPanel>
 
+            <StackPanel Spacing="4">
+                <TextBlock Text="Project Group"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <ComboBox x:Name="ProjectGroupComboBox"
+                          ItemsSource="{x:Bind ProjectGroups, Mode=OneWay}"
+                          DisplayMemberPath="Name"
+                          HorizontalAlignment="Stretch"
+                          PlaceholderText="Select group (optional)"
+                          Style="{StaticResource ModernComboBoxStyle}" />
+                <TextBlock Text="Assign this project to a group for better organization"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           FontSize="11" />
+            </StackPanel>
+
             <TextBlock Text="* Required fields"
                        Style="{StaticResource CaptionTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

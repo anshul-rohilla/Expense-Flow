@@ -10,13 +10,13 @@ namespace Expense_Flow.Services;
 
 public interface IPaymentModeService
 {
-    Task<ServiceResult<IEnumerable<PaymentMode>>> GetAllPaymentModesAsync();
+    Task<ServiceResult<IEnumerable<PaymentMode>>> GetAllPaymentModesAsync(int organizationId);
     Task<ServiceResult<IEnumerable<PaymentMode>>> GetPaymentModesByTypeAsync(PaymentModeType type);
     Task<ServiceResult<PaymentMode>> GetPaymentModeByIdAsync(int id);
     Task<ServiceResult<PaymentMode>> CreatePaymentModeAsync(PaymentMode paymentMode);
     Task<ServiceResult<PaymentMode>> UpdatePaymentModeAsync(PaymentMode paymentMode);
     Task<ServiceResult<bool>> DeletePaymentModeAsync(int id);
-    Task<ServiceResult<bool>> PaymentModeExistsAsync(string name, int? excludeId = null);
+    Task<ServiceResult<bool>> PaymentModeExistsAsync(string name, int organizationId, int? excludeId = null);
 }
 
 public class PaymentModeService : IPaymentModeService
@@ -30,11 +30,11 @@ public class PaymentModeService : IPaymentModeService
         _userService = userService;
     }
 
-    public async Task<ServiceResult<IEnumerable<PaymentMode>>> GetAllPaymentModesAsync()
+    public async Task<ServiceResult<IEnumerable<PaymentMode>>> GetAllPaymentModesAsync(int organizationId)
     {
         try
         {
-            var paymentModes = await _paymentModeRepository.GetAllAsync();
+            var paymentModes = await _paymentModeRepository.FindAsync(pm => pm.OrganizationId == organizationId);
             return ServiceResult<IEnumerable<PaymentMode>>.SuccessResult(paymentModes.OrderBy(pm => pm.Name));
         }
         catch (Exception ex)
@@ -115,6 +115,9 @@ public class PaymentModeService : IPaymentModeService
 
             existingPaymentMode.Name = paymentMode.Name;
             existingPaymentMode.Type = paymentMode.Type;
+            existingPaymentMode.FundSource = paymentMode.FundSource;
+            existingPaymentMode.Scope = paymentMode.Scope;
+            existingPaymentMode.OwnerId = paymentMode.OwnerId;
             existingPaymentMode.ContactId = paymentMode.ContactId;
             existingPaymentMode.CardType = paymentMode.CardType;
             existingPaymentMode.LastFourDigits = paymentMode.LastFourDigits;
@@ -151,12 +154,13 @@ public class PaymentModeService : IPaymentModeService
         }
     }
 
-    public async Task<ServiceResult<bool>> PaymentModeExistsAsync(string name, int? excludeId = null)
+    public async Task<ServiceResult<bool>> PaymentModeExistsAsync(string name, int organizationId, int? excludeId = null)
     {
         try
         {
             var exists = await _paymentModeRepository.ExistsAsync(pm =>
                 pm.Name.ToLower() == name.ToLower() &&
+                pm.OrganizationId == organizationId &&
                 (!excludeId.HasValue || pm.Id != excludeId.Value));
 
             return ServiceResult<bool>.SuccessResult(exists);
@@ -210,7 +214,7 @@ public class PaymentModeService : IPaymentModeService
             }
         }
 
-        var existsResult = await PaymentModeExistsAsync(paymentMode.Name, excludeId);
+        var existsResult = await PaymentModeExistsAsync(paymentMode.Name, paymentMode.OrganizationId, excludeId);
         if (existsResult.Success && existsResult.Data)
         {
             errors.Add($"A payment mode with the name '{paymentMode.Name}' already exists.");

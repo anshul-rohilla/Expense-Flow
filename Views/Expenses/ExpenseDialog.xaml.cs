@@ -10,6 +10,19 @@ using Windows.Storage.Pickers;
 
 namespace Expense_Flow.Views.Expenses;
 
+/// <summary>
+/// Represents a combined vendor/subscription item for the dropdown
+/// </summary>
+public class VendorSubscriptionItem
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public int? SubscriptionId { get; set; }
+    public int? VendorId { get; set; }
+    public bool IsNone => !SubscriptionId.HasValue && !VendorId.HasValue;
+
+    public override string ToString() => DisplayName;
+}
+
 public sealed partial class ExpenseDialog : ContentDialog
 {
     public Expense Expense { get; private set; }
@@ -19,7 +32,7 @@ public sealed partial class ExpenseDialog : ContentDialog
 
     public ObservableCollection<Project> Projects { get; } = new();
     public ObservableCollection<PaymentMode> PaymentModes { get; } = new();
-    public ObservableCollection<Subscription> Subscriptions { get; } = new();
+    public ObservableCollection<VendorSubscriptionItem> VendorSubscriptionItems { get; } = new();
     public ObservableCollection<ExpenseType> ExpenseTypes { get; } = new();
 
     public ExpenseDialog(Expense? expense = null)
@@ -46,7 +59,6 @@ public sealed partial class ExpenseDialog : ContentDialog
             NameTextBox.Text = expense.Name ?? string.Empty;
             AmountTextBox.Text = expense.Amount.ToString("0.00");
             DescriptionTextBox.Text = expense.Description ?? string.Empty;
-            PaymentAmountTextBox.Text = expense.PaymentAmount.ToString("0.00");
             
             if (expense.PaymentDate != default)
             {
@@ -77,7 +89,7 @@ public sealed partial class ExpenseDialog : ContentDialog
 
                 if (expense.HasInvoiceFile)
                 {
-                    FileNameText.Text = $"?? {expense.InvoiceFileName ?? "Attached file"}";
+                    FileNameText.Text = $"Attached: {expense.InvoiceFileName ?? "Attached file"}";
                 }
             }
         }
@@ -133,7 +145,9 @@ public sealed partial class ExpenseDialog : ContentDialog
 
             // Load Payment Modes
             var paymentModeService = App.Host!.Services.GetRequiredService<Services.IPaymentModeService>();
-            var paymentModesResult = await paymentModeService.GetAllPaymentModesAsync();
+            var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            var orgId = orgService.GetCurrentOrganizationId();
+            var paymentModesResult = await paymentModeService.GetAllPaymentModesAsync(orgId);
             
             if (paymentModesResult.Success && paymentModesResult.Data != null)
             {
@@ -153,27 +167,67 @@ public sealed partial class ExpenseDialog : ContentDialog
                 }
             }
 
-            // Load Subscriptions
+            // Load Vendors and Subscriptions into combined dropdown
+            var vendorService = App.Host!.Services.GetRequiredService<Services.IVendorService>();
             var subscriptionService = App.Host!.Services.GetRequiredService<Services.ISubscriptionService>();
-            var subscriptionsResult = await subscriptionService.GetAllSubscriptionsAsync();
             
+            VendorSubscriptionItems.Clear();
+            VendorSubscriptionItems.Add(new VendorSubscriptionItem { DisplayName = "(None)" });
+
+            var vendorsResult = await vendorService.GetAllVendorsAsync(orgId);
+            var subscriptionsResult = await subscriptionService.GetAllSubscriptionsAsync(orgId);
+
+            // Build vendor name map for subscription display
+            var vendorMap = vendorsResult.Success && vendorsResult.Data != null
+                ? vendorsResult.Data.ToDictionary(v => v.Id, v => v.Name)
+                : new System.Collections.Generic.Dictionary<int, string>();
+
+            // Add subscriptions first (with vendor name)
             if (subscriptionsResult.Success && subscriptionsResult.Data != null)
             {
-                Subscriptions.Clear();
-                Subscriptions.Add(new Subscription { Id = 0, Name = "(None)" });
-                foreach (var subscription in subscriptionsResult.Data)
+                foreach (var sub in subscriptionsResult.Data)
                 {
-                    Subscriptions.Add(subscription);
+                    var vendorName = vendorMap.TryGetValue(sub.VendorId, out var vn) ? vn : "";
+                    VendorSubscriptionItems.Add(new VendorSubscriptionItem
+                    {
+                        DisplayName = string.IsNullOrEmpty(vendorName)
+                            ? $"\u2B50 {sub.Name}"
+                            : $"\u2B50 {sub.Name} ({vendorName})",
+                        SubscriptionId = sub.Id,
+                        VendorId = sub.VendorId
+                    });
                 }
+            }
 
-                if (_isEditMode && Expense.SubscriptionId.HasValue)
+            // Add standalone vendors
+            if (vendorsResult.Success && vendorsResult.Data != null)
+            {
+                foreach (var vendor in vendorsResult.Data)
                 {
-                    SubscriptionComboBox.SelectedItem = Subscriptions.FirstOrDefault(s => s.Id == Expense.SubscriptionId.Value);
+                    VendorSubscriptionItems.Add(new VendorSubscriptionItem
+                    {
+                        DisplayName = $"\uD83C\uDFE2 {vendor.Name}",
+                        VendorId = vendor.Id
+                    });
                 }
-                else
-                {
-                    SubscriptionComboBox.SelectedIndex = 0;
-                }
+            }
+
+            SubscriptionComboBox.ItemsSource = VendorSubscriptionItems;
+            SubscriptionComboBox.DisplayMemberPath = "DisplayName";
+
+            if (_isEditMode && Expense.SubscriptionId.HasValue)
+            {
+                SubscriptionComboBox.SelectedItem = VendorSubscriptionItems
+                    .FirstOrDefault(x => x.SubscriptionId == Expense.SubscriptionId.Value);
+            }
+            else if (_isEditMode && Expense.VendorId.HasValue)
+            {
+                SubscriptionComboBox.SelectedItem = VendorSubscriptionItems
+                    .FirstOrDefault(x => x.VendorId == Expense.VendorId.Value && !x.SubscriptionId.HasValue);
+            }
+            else
+            {
+                SubscriptionComboBox.SelectedIndex = 0;
             }
         }
         catch (Exception ex)
@@ -221,7 +275,7 @@ public sealed partial class ExpenseDialog : ContentDialog
 
                 _uploadedFileStream = await file.OpenStreamForReadAsync();
                 _uploadedFileName = file.Name;
-                FileNameText.Text = $"?? {file.Name} ({fileSize / 1024:F2} KB)";
+                FileNameText.Text = $"Selected: {file.Name} ({fileSize / 1024:F2} KB)";
             }
         }
         catch (Exception ex)
@@ -232,33 +286,12 @@ public sealed partial class ExpenseDialog : ContentDialog
 
     private void ExpenseTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ValidateSubscriptionType();
+        // No additional validation needed
     }
 
     private void SubscriptionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ValidateSubscriptionType();
-    }
-
-    private void ValidateSubscriptionType()
-    {
-        if (SubscriptionComboBox.SelectedItem is Subscription subscription && 
-            subscription.Id > 0 &&
-            ExpenseTypeComboBox.SelectedItem is ExpenseType expenseType)
-        {
-            if (!string.IsNullOrEmpty(subscription.Type) && subscription.Type != expenseType.Name)
-            {
-                SubscriptionValidationText.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
-            }
-            else
-            {
-                SubscriptionValidationText.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
-            }
-        }
-        else
-        {
-            SubscriptionValidationText.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
-        }
+        // No additional validation needed
     }
 
     private async void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -301,14 +334,6 @@ public sealed partial class ExpenseDialog : ContentDialog
             if (ProjectComboBox.SelectedItem is not Project project)
             {
                 ShowError("Project is required.");
-                args.Cancel = true;
-                return;
-            }
-
-            // Validate Payment Amount
-            if (!decimal.TryParse(PaymentAmountTextBox.Text, out var paymentAmount) || paymentAmount <= 0)
-            {
-                ShowError("Payment Amount is required and must be greater than 0.");
                 args.Cancel = true;
                 return;
             }
@@ -401,16 +426,7 @@ public sealed partial class ExpenseDialog : ContentDialog
                 return;
             }
 
-            // Validate Subscription Type Match
-            if (SubscriptionComboBox.SelectedItem is Subscription subscription && subscription.Id > 0)
-            {
-                if (!string.IsNullOrEmpty(subscription.Type) && subscription.Type != expenseType.Name)
-                {
-                    ShowError($"Subscription/Vendor type '{subscription.Type}' does not match Expense Type '{expenseType.Name}'.");
-                    args.Cancel = true;
-                    return;
-                }
-            }
+            // Subscription validation removed - Type field no longer exists on Subscription model
 
             // Set expense properties
             Expense.Name = NameTextBox.Text.Trim();
@@ -418,7 +434,7 @@ public sealed partial class ExpenseDialog : ContentDialog
             Expense.ExpenseTypeId = expenseType.Id;
             Expense.Amount = amount;
             Expense.ProjectId = project.Id;
-            Expense.PaymentAmount = paymentAmount;
+            Expense.PaymentAmount = amount; // Payment amount equals expense amount
             Expense.PaymentModeId = paymentMode.Id;
             Expense.PaymentDate = PaymentDatePicker.Date.Value.DateTime;
 
@@ -463,14 +479,16 @@ public sealed partial class ExpenseDialog : ContentDialog
                 Expense.InvoiceFileName = null;
             }
 
-            // Subscription
-            if (SubscriptionComboBox.SelectedItem is Subscription selectedSubscription && selectedSubscription.Id > 0)
+            // Vendor/Subscription selection
+            if (SubscriptionComboBox.SelectedItem is VendorSubscriptionItem selectedItem && !selectedItem.IsNone)
             {
-                Expense.SubscriptionId = selectedSubscription.Id;
+                Expense.SubscriptionId = selectedItem.SubscriptionId;
+                Expense.VendorId = selectedItem.VendorId;
             }
             else
             {
                 Expense.SubscriptionId = null;
+                Expense.VendorId = null;
             }
 
             // Log success

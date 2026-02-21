@@ -213,7 +213,9 @@ public class ProjectGroupService : IProjectGroupService
             var mappings = await _mappingRepository.FindAsync(m => m.ProjectGroupId == projectGroupId);
             var projectIds = mappings.Select(m => m.ProjectId).ToList();
 
-            var projects = await _projectRepository.FindAsync(p => projectIds.Contains(p.Id));
+            var projects = await _projectRepository.FindWithIncludeAsync(
+                p => projectIds.Contains(p.Id),
+                p => p.Expenses);
             return ServiceResult<IEnumerable<Project>>.SuccessResult(projects.OrderBy(p => p.Name));
         }
         catch (Exception ex)

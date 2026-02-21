@@ -11,11 +11,24 @@ public class PaymentMode
     public int Id { get; set; }
 
     [Required]
+    public int OrganizationId { get; set; }
+    public Organization Organization { get; set; } = null!;
+
+    [Required]
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
     [Required]
     public PaymentModeType Type { get; set; }
+
+    [Required]
+    public FundSource FundSource { get; set; } = FundSource.Company;
+
+    [Required]
+    public PaymentModeScope Scope { get; set; } = PaymentModeScope.Organization;
+
+    public int? OwnerId { get; set; }
+    public Contact? Owner { get; set; }
 
     public int? ContactId { get; set; }
     public Contact? Contact { get; set; }
@@ -38,6 +51,7 @@ public class PaymentMode
     public string? ModifiedBy { get; set; }
 
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
+    public ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
     public ICollection<Project> ProjectsWithDefaultPaymentMode { get; set; } = new List<Project>();
 
     // Computed properties for display
@@ -53,11 +67,13 @@ public class PaymentMode
     [NotMapped]
     public string DisplayNumber => Type switch
     {
-        PaymentModeType.Card => $"•••• •••• •••• {LastFourDigits ?? "****"}",
+        PaymentModeType.Card => $"XXXX  XXXX  XXXX {LastFourDigits ?? "****"}",
         PaymentModeType.UPI => UpiId ?? "Not Set",
         PaymentModeType.Cash => Balance.HasValue ? $"{Balance.Value:N2}" : "0.00",
         _ => "N/A"
     };
+
+    public bool RequiresSettlement { get; set; } = false;
 
     [NotMapped]
     public string HolderLabel => $"{Type.ToString().ToUpper()} HOLDER";

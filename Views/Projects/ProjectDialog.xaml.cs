@@ -10,8 +10,10 @@ namespace Expense_Flow.Views.Projects;
 public sealed partial class ProjectDialog : ContentDialog
 {
     public Project Project { get; private set; }
+    public int? SelectedProjectGroupId { get; private set; }
     private bool _isEditMode;
     public ObservableCollection<PaymentMode> PaymentModes { get; } = new();
+    public ObservableCollection<ProjectGroup> ProjectGroups { get; } = new();
 
     public ProjectDialog(Project? project = null)
     {
@@ -58,7 +60,12 @@ public sealed partial class ProjectDialog : ContentDialog
     private async void LoadDataAsync()
     {
         var paymentModeService = App.Host!.Services.GetRequiredService<Services.IPaymentModeService>();
-        var paymentModesResult = await paymentModeService.GetAllPaymentModesAsync();
+        var orgService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+        var projectGroupService = App.Host!.Services.GetRequiredService<Services.IProjectGroupService>();
+        var orgId = orgService.GetCurrentOrganizationId();
+        
+        // Load payment modes
+        var paymentModesResult = await paymentModeService.GetAllPaymentModesAsync(orgId);
         
         if (paymentModesResult.Success && paymentModesResult.Data != null)
         {
@@ -76,6 +83,57 @@ public sealed partial class ProjectDialog : ContentDialog
             else
             {
                 PaymentModeComboBox.SelectedIndex = 0;
+            }
+        }
+
+        // Load project groups
+        var groupsResult = await projectGroupService.GetAllProjectGroupsAsync();
+        if (groupsResult.Success && groupsResult.Data != null)
+        {
+            ProjectGroups.Clear();
+            ProjectGroups.Add(new ProjectGroup { Id = 0, Name = "(None)" });
+            foreach (var g in groupsResult.Data)
+            {
+                ProjectGroups.Add(g);
+            }
+
+            // Select current group if editing - query mappings from service
+            if (_isEditMode)
+            {
+                int? currentGroupId = null;
+                
+                // Check loaded navigation property first
+                if (Project.ProjectGroupMappings?.Any() == true)
+                {
+                    currentGroupId = Project.ProjectGroupMappings.First().ProjectGroupId;
+                }
+                else
+                {
+                    // Query each group to find which one contains this project
+                    foreach (var g in groupsResult.Data)
+                    {
+                        var projectsInGroup = await projectGroupService.GetProjectsInGroupAsync(g.Id);
+                        if (projectsInGroup.Success && projectsInGroup.Data != null &&
+                            projectsInGroup.Data.Any(p => p.Id == Project.Id))
+                        {
+                            currentGroupId = g.Id;
+                            break;
+                        }
+                    }
+                }
+
+                if (currentGroupId.HasValue)
+                {
+                    ProjectGroupComboBox.SelectedItem = ProjectGroups.FirstOrDefault(g => g.Id == currentGroupId.Value);
+                }
+                else
+                {
+                    ProjectGroupComboBox.SelectedIndex = 0;
+                }
+            }
+            else
+            {
+                ProjectGroupComboBox.SelectedIndex = 0;
             }
         }
     }
@@ -102,6 +160,12 @@ public sealed partial class ProjectDialog : ContentDialog
 
         Project.Name = NameTextBox.Text.Trim();
         Project.Description = DescriptionTextBox.Text.Trim();
+
+        if (!_isEditMode)
+        {
+            var orgSetService = App.Host!.Services.GetRequiredService<Services.IOrganizationService>();
+            Project.OrganizationId = orgSetService.GetCurrentOrganizationId();
+        }
         
         if (!double.IsNaN(BudgetNumberBox.Value) && BudgetNumberBox.Value >= 0)
         {
@@ -119,6 +183,16 @@ public sealed partial class ProjectDialog : ContentDialog
         else
         {
             Project.DefaultPaymentModeId = null;
+        }
+
+        // Save selected group
+        if (ProjectGroupComboBox.SelectedItem is ProjectGroup group && group.Id > 0)
+        {
+            SelectedProjectGroupId = group.Id;
+        }
+        else
+        {
+            SelectedProjectGroupId = null;
         }
     }
 

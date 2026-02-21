@@ -37,33 +37,58 @@ public class DatabaseService
             
             if (databaseExists)
             {
-                // Check if ExpenseTypes table exists
+                // Check if core tables exist (including new architecture tables)
                 try
                 {
                     await _context.ExpenseTypes.AnyAsync();
+                    await _context.Organizations.AnyAsync();
+                    await _context.Vendors.AnyAsync();
+                    await _context.Settlements.AnyAsync();
+                    await _context.ProjectVendors.AnyAsync();
+                    await _context.ProjectMembers.AnyAsync();
+                    await _context.OrganizationMembers.AnyAsync();
                 }
                 catch (Microsoft.Data.Sqlite.SqliteException)
                 {
-                    // Table doesn't exist, need to recreate database
-                    System.Diagnostics.Debug.WriteLine("ExpenseTypes table missing. Recreating database...");
+                    // Tables don't exist, need to recreate database
+                    System.Diagnostics.Debug.WriteLine("Required tables missing. Recreating database with new schema...");
                     await _context.Database.EnsureDeletedAsync();
                     databaseExists = false;
                 }
                 
-                // Check if Subscriptions table has Reference column (renamed from Username)
+                // Check if Subscriptions table has new schema columns
                 if (databaseExists)
                 {
                     try
                     {
-                        // Try to query the Reference column
-                        await _context.Subscriptions.Select(s => s.Reference).FirstOrDefaultAsync();
+                        // Try to query new schema columns
+                        await _context.Subscriptions.Select(s => new { s.Reference, s.VendorId, s.BillingCycle }).FirstOrDefaultAsync();
+                        await _context.Expenses.Select(e => new { e.VendorId, e.FundSource, e.ReimbursementStatus }).FirstOrDefaultAsync();
+                        await _context.Contacts.Select(c => c.OrganizationId).FirstOrDefaultAsync();
+                        await _context.Projects.Select(p => p.OrganizationId).FirstOrDefaultAsync();
                     }
-                    catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.Message.Contains("no such column"))
+                    catch (Microsoft.Data.Sqlite.SqliteException)
                     {
-                        // Column doesn't exist, need to recreate database
-                        System.Diagnostics.Debug.WriteLine("Reference column missing in Subscriptions. Recreating database...");
+                        // Columns don't exist, need to recreate database with new schema
+                        System.Diagnostics.Debug.WriteLine("Schema mismatch detected. Recreating database with updated schema...");
                         await _context.Database.EnsureDeletedAsync();
                         databaseExists = false;
+                    }
+                }
+
+                // Check for new columns added incrementally (preserve existing data)
+                if (databaseExists)
+                {
+                    try
+                    {
+                        await _context.PaymentModes.Select(pm => pm.RequiresSettlement).FirstOrDefaultAsync();
+                    }
+                    catch (Microsoft.Data.Sqlite.SqliteException)
+                    {
+                        // Add RequiresSettlement column via ALTER TABLE to preserve data
+                        System.Diagnostics.Debug.WriteLine("Adding RequiresSettlement column to PaymentModes...");
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "ALTER TABLE PaymentModes ADD COLUMN RequiresSettlement INTEGER NOT NULL DEFAULT 0");
                     }
                 }
             }

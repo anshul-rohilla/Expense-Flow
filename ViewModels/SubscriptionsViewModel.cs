@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +12,8 @@ namespace Expense_Flow.ViewModels;
 public partial class SubscriptionsViewModel : ViewModelBase
 {
     private readonly ISubscriptionService _subscriptionService;
+    private readonly IOrganizationService _organizationService;
+    private readonly IVendorService _vendorService;
 
     [ObservableProperty]
     private ObservableCollection<Subscription> _subscriptions = new();
@@ -21,9 +24,14 @@ public partial class SubscriptionsViewModel : ViewModelBase
     [ObservableProperty]
     private string _searchText = string.Empty;
 
-    public SubscriptionsViewModel(ISubscriptionService SubscriptionService)
+    public SubscriptionsViewModel(
+        ISubscriptionService subscriptionService,
+        IOrganizationService organizationService,
+        IVendorService vendorService)
     {
-        _subscriptionService = SubscriptionService;
+        _subscriptionService = subscriptionService;
+        _organizationService = organizationService;
+        _vendorService = vendorService;
     }
 
     [RelayCommand]
@@ -31,9 +39,24 @@ public partial class SubscriptionsViewModel : ViewModelBase
     {
         await ExecuteAsync(async () =>
         {
-            var result = await _subscriptionService.GetAllSubscriptionsAsync();
+            var orgId = _organizationService.GetCurrentOrganizationId();
+            var result = await _subscriptionService.GetAllSubscriptionsAsync(orgId);
             if (result.Success && result.Data != null)
             {
+                // Load vendor names for display
+                var vendorsResult = await _vendorService.GetAllVendorsAsync(orgId);
+                var vendorMap = vendorsResult.Success && vendorsResult.Data != null
+                    ? vendorsResult.Data.ToDictionary(v => v.Id, v => v.Name)
+                    : new System.Collections.Generic.Dictionary<int, string>();
+
+                foreach (var sub in result.Data)
+                {
+                    if (vendorMap.TryGetValue(sub.VendorId, out var vendorName))
+                    {
+                        sub.SetVendorName(vendorName);
+                    }
+                }
+
                 Subscriptions = new ObservableCollection<Subscription>(result.Data);
             }
             else

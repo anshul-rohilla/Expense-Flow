@@ -83,6 +83,17 @@
                          Style="{StaticResource ModernTextBoxStyle}"/>
             </StackPanel>
 
+            <!-- Requires Settlement -->
+            <CheckBox x:Name="RequiresSettlementCheckBox"
+                      Content="Requires Settlement"
+                      IsChecked="False"/>
+            <TextBlock Text="Enable if expenses paid with this mode need reimbursement/settlement"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       FontSize="11"
+                       Margin="0,-12,0,0"
+                       TextWrapping="Wrap"/>
+
             <TextBlock Text="* Required fields" 
                        Style="{StaticResource CaptionTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>

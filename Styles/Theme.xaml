@@ -71,6 +71,15 @@
                       Offset="1" />
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="ErrorGradientBrush"
+                         StartPoint="0,0"
+                         EndPoint="1,1">
+        <GradientStop Color="#E81123"
+                      Offset="0" />
+        <GradientStop Color="#FF6B6B"
+                      Offset="1" />
+    </LinearGradientBrush>
+
     <!-- Enhanced Card Styles -->
     <Style x:Key="CardStyle"
            TargetType="Border">

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Expense_Flow.Views.Vendors.VendorsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Expense_Flow.Models"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RootGrid.Padding" Value="16"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="640" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RootGrid.Padding" Value="24"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1007" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RootGrid.Padding" Value="32,24,32,32"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Section -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="8">
+                <TextBlock Text="Vendors" 
+                         Style="{StaticResource PageTitleTextStyle}"/>
+                <TextBlock Text="Manage your vendor catalog — link vendors across projects"
+                         Style="{StaticResource BodyTextBlockStyle}"
+                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                  Content="Add Vendor" 
+                  Style="{StaticResource PrimaryButtonStyle}"
+                  VerticalAlignment="Center"
+                  Click="AddVendor_Click">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="N" Modifiers="Control"/>
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Grid>
+
+        <!-- Stats Row -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" 
+                    Style="{StaticResource StatCardStyle}"
+                    Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                    Margin="0,0,8,0"
+                    Translation="0,0,8">
+                <StackPanel Spacing="4" Padding="16">
+                    <TextBlock Text="Active Vendors" 
+                             Style="{StaticResource CaptionTextBlockStyle}"
+                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{x:Bind ViewModel.ActiveVendorCount, Mode=OneWay}" 
+                             FontSize="28" FontWeight="Bold"
+                             Foreground="{StaticResource PrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" 
+                    Style="{StaticResource StatCardStyle}"
+                    Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                    Margin="8,0,0,0"
+                    Translation="0,0,8">
+                <StackPanel Spacing="4" Padding="16">
+                    <TextBlock Text="Total Vendors" 
+                             Style="{StaticResource CaptionTextBlockStyle}"
+                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{x:Bind ViewModel.TotalVendorCount, Mode=OneWay}" 
+                             FontSize="28" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Search Bar -->
+        <Grid Grid.Row="2" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                  Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                  CornerRadius="12"
+                  Padding="16"
+                  Translation="0,0,8">
+                <TextBox PlaceholderText="Search vendors..."
+                       Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                       BorderThickness="0"
+                       Background="Transparent">
+                    <TextBox.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F" Modifiers="Control"/>
+                    </TextBox.KeyboardAccelerators>
+                </TextBox>
+            </Border>
+
+            <ToggleSwitch Grid.Column="1"
+                         Header="Show Archived"
+                         IsOn="{x:Bind ViewModel.ShowArchived, Mode=TwoWay}"
+                         Margin="16,0,0,0"
+                         VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- Content -->
+        <Grid Grid.Row="3">
+            <!-- Loading -->
+            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
+                        Width="50" Height="50"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+            <!-- Error -->
+            <InfoBar Severity="Error"
+                   IsOpen="{x:Bind ViewModel.HasErrors, Mode=OneWay}"
+                   Title="Error"
+                   Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                   Margin="0,0,0,16"
+                   VerticalAlignment="Top"/>
+
+            <!-- Empty State -->
+            <Border Style="{StaticResource StatCardStyle}"
+                  Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                  Translation="0,0,16"
+                  Visibility="{x:Bind ViewModel.FilteredVendors.Count, Mode=OneWay, Converter={StaticResource CountToVisibilityConverter}}">
+                <StackPanel Spacing="20" Padding="48">
+                    <Border Background="{StaticResource SuccessGradientBrush}"
+                          Width="80" Height="80"
+                          CornerRadius="40"
+                          HorizontalAlignment="Center">
+                        <FontIcon Glyph="&#xE731;" FontSize="40" Foreground="White"/>
+                    </Border>
+                    <TextBlock Text="No vendors yet"
+                             Style="{StaticResource SectionTitleTextStyle}"
+                             HorizontalAlignment="Center"/>
+                    <TextBlock Text="Add vendors like GitHub, Azure, AWS — then link them to any project"
+                             Style="{StaticResource BodyTextBlockStyle}"
+                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                             HorizontalAlignment="Center"
+                             TextWrapping="Wrap"
+                             TextAlignment="Center"
+                             MaxWidth="400"/>
+                    <Button Content="Add Your First Vendor"
+                          Style="{StaticResource PrimaryButtonStyle}"
+                          HorizontalAlignment="Center"
+                          Click="AddVendor_Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Vendors List -->
+            <ScrollViewer Visibility="{x:Bind ViewModel.FilteredVendors.Count, Mode=OneWay, Converter={StaticResource InverseCountToVisibilityConverter}}">
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.FilteredVendors, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="16"/>
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="models:Vendor">
+                            <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                                  Style="{StaticResource CardStyle}"
+                                  Translation="0,0,8">
+                                <Grid ColumnSpacing="20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Vendor Icon -->
+                                    <Border Grid.Column="0"
+                                          Background="{StaticResource SuccessGradientBrush}"
+                                          Width="56" Height="56"
+                                          CornerRadius="16">
+                                        <FontIcon Glyph="&#xE731;" Foreground="White" FontSize="28"/>
+                                    </Border>
+
+                                    <!-- Vendor Info -->
+                                    <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{x:Bind Name}" 
+                                                     Style="{StaticResource CardTitleTextStyle}"/>
+                                            <Border Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
+                                                  CornerRadius="4"
+                                                  Padding="6,2"
+                                                  Visibility="{x:Bind IsArchived, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="Archived" FontSize="10"
+                                                         Foreground="{ThemeResource SystemFillColorCautionBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="16">
+                                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                                      Visibility="{x:Bind Website, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <FontIcon Glyph="&#xE774;" FontSize="14" Foreground="{StaticResource PrimaryBrush}"/>
+                                                <TextBlock Text="{x:Bind Website}" 
+                                                         Style="{StaticResource CaptionTextBlockStyle}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                                      Visibility="{x:Bind AccountReference, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <FontIcon Glyph="&#xE77B;" FontSize="14" Foreground="{StaticResource SuccessBrush}"/>
+                                                <TextBlock Text="{x:Bind AccountReference}" 
+                                                         Style="{StaticResource CaptionTextBlockStyle}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind Notes}" 
+                                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                 MaxLines="1"
+                                                 TextTrimming="CharacterEllipsis"
+                                                 Visibility="{x:Bind Notes, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                    </StackPanel>
+
+                                    <!-- Actions -->
+                                    <StackPanel Grid.Column="2" 
+                                              Orientation="Horizontal" 
+                                              Spacing="8"
+                                              VerticalAlignment="Center">
+                                        <Button Style="{StaticResource IconButtonStyle}"
+                                              Click="EditVendor_Click"
+                                              Tag="{x:Bind}"
+                                              ToolTipService.ToolTip="Edit">
+                                            <FontIcon Glyph="&#xE70F;" FontSize="16"/>
+                                        </Button>
+                                        <Button Style="{StaticResource IconButtonStyle}"
+                                              Click="ArchiveVendor_Click"
+                                              Tag="{x:Bind}"
+                                              ToolTipService.ToolTip="Archive/Unarchive">
+                                            <FontIcon Glyph="&#xE7B8;" FontSize="16"/>
+                                        </Button>
+                                        <Button Style="{StaticResource IconButtonStyle}"
+                                              Click="DeleteVendor_Click"
+                                              Tag="{x:Bind}"
+                                              ToolTipService.ToolTip="Delete">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="16" Foreground="{StaticResource ErrorBrush}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

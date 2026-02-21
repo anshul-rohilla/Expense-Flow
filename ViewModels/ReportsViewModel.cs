@@ -16,7 +16,18 @@ public enum ReportType
     ByProjectGroup,
     ByPaymentMode,
     ByContact,
+    ByVendor,
+    ByExpenseType,
     Overall
+}
+
+public class ReportItem
+{
+    public string Label { get; set; } = string.Empty;
+    public string AmountFormatted { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public decimal Amount { get; set; }
+    public double Percentage { get; set; }
 }
 
 public partial class ReportsViewModel : ViewModelBase
@@ -38,7 +49,7 @@ public partial class ReportsViewModel : ViewModelBase
     private DateTime? _endDate;
 
     [ObservableProperty]
-    private ObservableCollection<object> _reportData = new();
+    private ObservableCollection<ReportItem> _reportData = new();
 
     [ObservableProperty]
     private string _totalAmountFormatted = string.Empty;
@@ -54,6 +65,27 @@ public partial class ReportsViewModel : ViewModelBase
 
     [ObservableProperty]
     private decimal _averageAmount;
+
+    [ObservableProperty]
+    private string _highestExpenseLabel = string.Empty;
+
+    [ObservableProperty]
+    private string _highestExpenseAmountFormatted = string.Empty;
+
+    [ObservableProperty]
+    private string _lowestExpenseLabel = string.Empty;
+
+    [ObservableProperty]
+    private string _lowestExpenseAmountFormatted = string.Empty;
+
+    [ObservableProperty]
+    private string _mostFrequentCategory = string.Empty;
+
+    [ObservableProperty]
+    private int _mostFrequentCategoryCount;
+
+    [ObservableProperty]
+    private string _dateRangeLabel = string.Empty;
 
     public ReportsViewModel(
         IExpenseService expenseService,
@@ -74,10 +106,13 @@ public partial class ReportsViewModel : ViewModelBase
         StartDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         EndDate = DateTime.Now;
         
-        // Initialize formatted values
-        TotalAmountFormatted = _settingsService.FormatCurrency(0);
-        AverageAmountFormatted = _settingsService.FormatCurrency(0);
+        // Initialize formatted values using settings currency
+        FormatZero = _settingsService.FormatCurrency(0);
+        TotalAmountFormatted = FormatZero;
+        AverageAmountFormatted = FormatZero;
     }
+
+    public string FormatZero { get; }
 
     [RelayCommand]
     private async Task GenerateReportAsync()
@@ -98,6 +133,12 @@ public partial class ReportsViewModel : ViewModelBase
                 case ReportType.ByContact:
                     await GenerateContactReportAsync();
                     break;
+                case ReportType.ByVendor:
+                    await GenerateVendorReportAsync();
+                    break;
+                case ReportType.ByExpenseType:
+                    await GenerateExpenseTypeReportAsync();
+                    break;
                 case ReportType.Overall:
                     await GenerateOverallReportAsync();
                     break;
@@ -110,28 +151,59 @@ public partial class ReportsViewModel : ViewModelBase
         var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
         if (expensesResult.Success && expensesResult.Data != null)
         {
+            var total = expensesResult.Data.Sum(e => e.Amount);
             var groupedData = expensesResult.Data
                 .GroupBy(e => e.ProjectId)
-                .Select(g => new
+                .Select(g => new ReportItem
                 {
-                    ProjectId = g.Key,
-                    ProjectName = g.First().Project?.Name ?? "Unknown",
-                    TotalAmount = g.Sum(e => e.Amount),
-                    Count = g.Count()
+                    Label = g.First().Project?.Name ?? "Unknown",
+                    Amount = g.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(g.Sum(e => e.Amount)),
+                    Count = g.Count(),
+                    Percentage = total > 0 ? (double)(g.Sum(e => e.Amount) / total * 100) : 0
                 })
-                .OrderByDescending(x => x.TotalAmount);
+                .OrderByDescending(x => x.Amount);
 
-            ReportData = new ObservableCollection<object>(groupedData);
+            ReportData = new ObservableCollection<ReportItem>(groupedData);
             CalculateSummary(expensesResult.Data);
         }
     }
 
     private async Task GenerateProjectGroupReportAsync()
     {
-        // Implementation will group by project groups
         var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
         if (expensesResult.Success && expensesResult.Data != null)
         {
+            // Get all groups and their project mappings
+            var groupsResult = await _projectGroupService.GetAllProjectGroupsAsync();
+            var groups = groupsResult.Success && groupsResult.Data != null ? groupsResult.Data.ToList() : new List<ProjectGroup>();
+            
+            // Build project-to-group lookup
+            var projectGroupMap = new Dictionary<int, string>();
+            foreach (var group in groups)
+            {
+                var projectsInGroup = await _projectGroupService.GetProjectsInGroupAsync(group.Id);
+                if (projectsInGroup.Success && projectsInGroup.Data != null)
+                {
+                    foreach (var project in projectsInGroup.Data)
+                    {
+                        projectGroupMap[project.Id] = group.Name;
+                    }
+                }
+            }
+
+            var groupedData = expensesResult.Data
+                .GroupBy(e => projectGroupMap.TryGetValue(e.ProjectId, out var groupName) ? groupName : "Ungrouped")
+                .Select(g => new ReportItem
+                {
+                    Label = g.Key,
+                    Amount = g.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(g.Sum(e => e.Amount)),
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Amount);
+
+            ReportData = new ObservableCollection<ReportItem>(groupedData);
             CalculateSummary(expensesResult.Data);
         }
     }
@@ -141,28 +213,88 @@ public partial class ReportsViewModel : ViewModelBase
         var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
         if (expensesResult.Success && expensesResult.Data != null)
         {
+            var total = expensesResult.Data.Sum(e => e.Amount);
             var groupedData = expensesResult.Data
                 .GroupBy(e => e.PaymentModeId)
-                .Select(g => new
+                .Select(g => new ReportItem
                 {
-                    PaymentModeId = g.Key,
-                    PaymentModeName = g.First().PaymentMode?.Name ?? "Unknown",
-                    TotalAmount = g.Sum(e => e.Amount),
-                    Count = g.Count()
+                    Label = g.First().PaymentMode?.Name ?? "Unknown",
+                    Amount = g.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(g.Sum(e => e.Amount)),
+                    Count = g.Count(),
+                    Percentage = total > 0 ? (double)(g.Sum(e => e.Amount) / total * 100) : 0
                 })
-                .OrderByDescending(x => x.TotalAmount);
+                .OrderByDescending(x => x.Amount);
 
-            ReportData = new ObservableCollection<object>(groupedData);
+            ReportData = new ObservableCollection<ReportItem>(groupedData);
+            CalculateSummary(expensesResult.Data);
+        }
+    }
+
+    private async Task GenerateVendorReportAsync()
+    {
+        var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
+        if (expensesResult.Success && expensesResult.Data != null)
+        {
+            var total = expensesResult.Data.Sum(e => e.Amount);
+            var groupedData = expensesResult.Data
+                .GroupBy(e => e.VendorId ?? 0)
+                .Select(g => new ReportItem
+                {
+                    Label = g.First().Vendor?.Name ?? (g.Key == 0 ? "No Vendor" : "Unknown"),
+                    Amount = g.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(g.Sum(e => e.Amount)),
+                    Count = g.Count(),
+                    Percentage = total > 0 ? (double)(g.Sum(e => e.Amount) / total * 100) : 0
+                })
+                .OrderByDescending(x => x.Amount);
+
+            ReportData = new ObservableCollection<ReportItem>(groupedData);
+            CalculateSummary(expensesResult.Data);
+        }
+    }
+
+    private async Task GenerateExpenseTypeReportAsync()
+    {
+        var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
+        if (expensesResult.Success && expensesResult.Data != null)
+        {
+            var total = expensesResult.Data.Sum(e => e.Amount);
+            var groupedData = expensesResult.Data
+                .GroupBy(e => e.ExpenseTypeId)
+                .Select(g => new ReportItem
+                {
+                    Label = g.First().ExpenseType?.Name ?? "Unknown",
+                    Amount = g.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(g.Sum(e => e.Amount)),
+                    Count = g.Count(),
+                    Percentage = total > 0 ? (double)(g.Sum(e => e.Amount) / total * 100) : 0
+                })
+                .OrderByDescending(x => x.Amount);
+
+            ReportData = new ObservableCollection<ReportItem>(groupedData);
             CalculateSummary(expensesResult.Data);
         }
     }
 
     private async Task GenerateContactReportAsync()
     {
-        // Implementation will group by contacts through payment modes
         var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
         if (expensesResult.Success && expensesResult.Data != null)
         {
+            // Group by vendor (who was paid)
+            var groupedData = expensesResult.Data
+                .GroupBy(e => e.VendorId ?? 0)
+                .Select(g => new ReportItem
+                {
+                    Label = g.First().Vendor?.Name ?? (g.Key == 0 ? "No Vendor" : "Unknown"),
+                    Amount = g.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(g.Sum(e => e.Amount)),
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Amount);
+
+            ReportData = new ObservableCollection<ReportItem>(groupedData);
             CalculateSummary(expensesResult.Data);
         }
     }
@@ -172,27 +304,84 @@ public partial class ReportsViewModel : ViewModelBase
         var expensesResult = await _expenseService.GetExpensesByDateRangeAsync(StartDate, EndDate);
         if (expensesResult.Success && expensesResult.Data != null)
         {
-            var summaryData = new[]
+            var items = new List<ReportItem>
             {
-                new { Category = "Total Expenses", Value = expensesResult.Data.Sum(e => e.Amount) },
-                new { Category = "Transaction Count", Value = (decimal)expensesResult.Data.Count() },
-                new { Category = "Average Amount", Value = expensesResult.Data.Any() ? expensesResult.Data.Average(e => e.Amount) : 0 }
+                new ReportItem
+                {
+                    Label = "Total Expenses",
+                    Amount = expensesResult.Data.Sum(e => e.Amount),
+                    AmountFormatted = _settingsService.FormatCurrency(expensesResult.Data.Sum(e => e.Amount)),
+                    Count = expensesResult.Data.Count()
+                },
+                new ReportItem
+                {
+                    Label = "Transaction Count",
+                    Amount = expensesResult.Data.Count(),
+                    AmountFormatted = expensesResult.Data.Count().ToString(),
+                    Count = expensesResult.Data.Count()
+                },
+                new ReportItem
+                {
+                    Label = "Average Amount",
+                    Amount = expensesResult.Data.Any() ? expensesResult.Data.Average(e => e.Amount) : 0,
+                    AmountFormatted = _settingsService.FormatCurrency(
+                        expensesResult.Data.Any() ? expensesResult.Data.Average(e => e.Amount) : 0),
+                    Count = expensesResult.Data.Count()
+                }
             };
 
-            ReportData = new ObservableCollection<object>(summaryData);
+            ReportData = new ObservableCollection<ReportItem>(items);
             CalculateSummary(expensesResult.Data);
         }
     }
 
     private void CalculateSummary(IEnumerable<Expense> expenses)
     {
-        TotalAmount = expenses.Sum(e => e.Amount);
-        TransactionCount = expenses.Count();
+        var expenseList = expenses.ToList();
+        TotalAmount = expenseList.Sum(e => e.Amount);
+        TransactionCount = expenseList.Count;
         AverageAmount = TransactionCount > 0 ? TotalAmount / TransactionCount : 0;
         
-        // Format currency using settings
         TotalAmountFormatted = _settingsService.FormatCurrency(TotalAmount);
         AverageAmountFormatted = _settingsService.FormatCurrency(AverageAmount);
+
+        // Additional insights
+        if (expenseList.Any())
+        {
+            var highest = expenseList.OrderByDescending(e => e.Amount).First();
+            HighestExpenseLabel = highest.Name;
+            HighestExpenseAmountFormatted = _settingsService.FormatCurrency(highest.Amount);
+
+            var lowest = expenseList.OrderBy(e => e.Amount).First();
+            LowestExpenseLabel = lowest.Name;
+            LowestExpenseAmountFormatted = _settingsService.FormatCurrency(lowest.Amount);
+
+            var topCategory = expenseList
+                .GroupBy(e => e.ExpenseType?.Name ?? "Unknown")
+                .OrderByDescending(g => g.Count())
+                .First();
+            MostFrequentCategory = topCategory.Key;
+            MostFrequentCategoryCount = topCategory.Count();
+        }
+        else
+        {
+            HighestExpenseLabel = "N/A";
+            HighestExpenseAmountFormatted = FormatZero;
+            LowestExpenseLabel = "N/A";
+            LowestExpenseAmountFormatted = FormatZero;
+            MostFrequentCategory = "N/A";
+            MostFrequentCategoryCount = 0;
+        }
+
+        // Date range label
+        if (StartDate.HasValue && EndDate.HasValue)
+        {
+            DateRangeLabel = $"{StartDate.Value:MMM dd, yyyy} — {EndDate.Value:MMM dd, yyyy}";
+        }
+        else
+        {
+            DateRangeLabel = "All Time";
+        }
     }
 
     [RelayCommand]

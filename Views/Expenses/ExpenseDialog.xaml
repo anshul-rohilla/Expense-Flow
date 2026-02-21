@@ -144,7 +144,7 @@
                                 <TextBlock Text="Invoice Attachment (Optional)"
                                            Style="{StaticResource BodyStrongTextBlockStyle}" />
                                 <Button x:Name="UploadFileButton"
-                                        Content="?? Choose File (Max 10MB)"
+                                        Content="Choose File (Max 10MB)"
                                         Click="UploadFileButton_Click"
                                         HorizontalAlignment="Stretch" />
                                 <TextBlock x:Name="FileNameText"
@@ -169,44 +169,27 @@
                            Style="{StaticResource SectionTitleTextStyle}"
                            Foreground="{StaticResource AccentBrush}" />
 
-                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                        CornerRadius="8"
-                        Padding="16">
-                    <StackPanel Spacing="12">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Payment Amount *"
-                                       Style="{StaticResource BodyStrongTextBlockStyle}" />
-                            <TextBox x:Name="PaymentAmountTextBox"
-                                     PlaceholderText="0.00"
-                                     Text="0"
-                                     InputScope="Number"
-                                     Style="{StaticResource ModernTextBoxStyle}" />
-                            <TextBlock Text="Amount actually paid (must be greater than 0)"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       FontSize="11" />
-                        </StackPanel>
-
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Payment Mode *"
-                                       Style="{StaticResource BodyStrongTextBlockStyle}" />
-                            <ComboBox x:Name="PaymentModeComboBox"
-                                      ItemsSource="{x:Bind PaymentModes, Mode=OneWay}"
-                                      DisplayMemberPath="Name"
-                                      HorizontalAlignment="Stretch"
-                                      PlaceholderText="Select payment mode"
-                                      Style="{StaticResource ModernComboBoxStyle}" />
-                        </StackPanel>
-
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="Payment Date *"
-                                       Style="{StaticResource BodyStrongTextBlockStyle}" />
-                            <CalendarDatePicker x:Name="PaymentDatePicker"
-                                                PlaceholderText="Select payment date"
-                                                HorizontalAlignment="Stretch" />
-                        </StackPanel>
+                <StackPanel Spacing="12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Payment Mode *"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="PaymentModeComboBox"
+                                  ItemsSource="{x:Bind PaymentModes, Mode=OneWay}"
+                                  DisplayMemberPath="Name"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="Select payment mode"
+                                  Style="{StaticResource ModernComboBoxStyle}" />
                     </StackPanel>
-                </Border>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Payment Date *"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <CalendarDatePicker x:Name="PaymentDatePicker"
+                                            PlaceholderText="Select payment date"
+                                            HorizontalAlignment="Stretch"
+                                            MinHeight="36" />
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
 
             <!-- Section 4: Project & Subscription -->
@@ -227,22 +210,17 @@
                 </StackPanel>
 
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Subscription/Vendor (Optional)"
+                    <TextBlock Text="Subscription / Vendor (Optional)"
                                Style="{StaticResource BodyStrongTextBlockStyle}" />
                     <ComboBox x:Name="SubscriptionComboBox"
-                              ItemsSource="{x:Bind Subscriptions, Mode=OneWay}"
-                              DisplayMemberPath="Name"
                               HorizontalAlignment="Stretch"
                               PlaceholderText="Select subscription or vendor (optional)"
                               Style="{StaticResource ModernComboBoxStyle}"
                               SelectionChanged="SubscriptionComboBox_SelectionChanged" />
-                    <TextBlock x:Name="SubscriptionValidationText"
-                               Text="?? Subscription/Vendor type must match Expense Type"
+                    <TextBlock Text="Leave empty for expenses without a subscription or vendor"
                                Style="{StaticResource CaptionTextBlockStyle}"
-                               Foreground="{StaticResource WarningBrush}"
-                               FontSize="11"
-                               Visibility="Collapsed"
-                               TextWrapping="Wrap" />
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               FontSize="11" />
                 </StackPanel>
             </StackPanel>
 
@@ -254,7 +232,7 @@
                     <FontIcon Glyph="&#xE946;"
                               FontSize="14"
                               Foreground="{StaticResource AccentBrush}" />
-                    <TextBlock Text="* Required fields | All payment details are mandatory"
+                    <TextBlock Text="* Required fields"
                                Style="{StaticResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                VerticalAlignment="Center" />

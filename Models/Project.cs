@@ -12,6 +12,10 @@ public class Project
     public int Id { get; set; }
 
     [Required]
+    public int OrganizationId { get; set; }
+    public Organization Organization { get; set; } = null!;
+
+    [Required]
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
@@ -26,6 +30,9 @@ public class Project
     // Monthly budget (renamed from Budget for clarity)
     public decimal? MonthlyBudget { get; set; }
 
+    [MaxLength(10)]
+    public string Currency { get; set; } = "INR";
+
     public bool IsArchived { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -34,8 +41,12 @@ public class Project
     public DateTime? ModifiedAt { get; set; }
     public string? ModifiedBy { get; set; }
 
+    // Navigation
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     public ICollection<ProjectGroupMapping> ProjectGroupMappings { get; set; } = new List<ProjectGroupMapping>();
+    public ICollection<ProjectVendor> ProjectVendors { get; set; } = new List<ProjectVendor>();
+    public ICollection<ProjectSubscription> ProjectSubscriptions { get; set; } = new List<ProjectSubscription>();
+    public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
 
     // Computed properties for analytics
     [NotMapped]
@@ -51,9 +62,8 @@ public class Project
         {
             var now = DateTime.Now;
             return Expenses?
-                .Where(e => e.InvoiceDate.HasValue && 
-                           e.InvoiceDate.Value.Year == now.Year && 
-                           e.InvoiceDate.Value.Month == now.Month)
+                .Where(e => e.PaymentDate.Year == now.Year && 
+                           e.PaymentDate.Month == now.Month)
                 .Sum(e => e.Amount) ?? 0;
         }
     }
@@ -65,9 +75,8 @@ public class Project
         {
             var lastMonth = DateTime.Now.AddMonths(-1);
             return Expenses?
-                .Where(e => e.InvoiceDate.HasValue && 
-                           e.InvoiceDate.Value.Year == lastMonth.Year && 
-                           e.InvoiceDate.Value.Month == lastMonth.Month)
+                .Where(e => e.PaymentDate.Year == lastMonth.Year && 
+                           e.PaymentDate.Month == lastMonth.Month)
                 .Sum(e => e.Amount) ?? 0;
         }
     }
@@ -79,7 +88,7 @@ public class Project
         {
             var now = DateTime.Now;
             return Expenses?
-                .Where(e => e.InvoiceDate.HasValue && e.InvoiceDate.Value.Year == now.Year)
+                .Where(e => e.PaymentDate.Year == now.Year)
                 .Sum(e => e.Amount) ?? 0;
         }
     }
@@ -114,18 +123,16 @@ public class Project
     public decimal GetExpensesForDateRange(DateTime startDate, DateTime endDate)
     {
         return Expenses?
-            .Where(e => e.InvoiceDate.HasValue &&
-                       e.InvoiceDate.Value >= startDate &&
-                       e.InvoiceDate.Value <= endDate)
+            .Where(e => e.PaymentDate >= startDate &&
+                       e.PaymentDate <= endDate)
             .Sum(e => e.Amount) ?? 0;
     }
 
     public IEnumerable<Expense> GetExpensesByDateRange(DateTime startDate, DateTime endDate)
     {
         return Expenses?
-            .Where(e => e.InvoiceDate.HasValue &&
-                       e.InvoiceDate.Value >= startDate &&
-                       e.InvoiceDate.Value <= endDate)
-            .OrderByDescending(e => e.InvoiceDate) ?? Enumerable.Empty<Expense>();
+            .Where(e => e.PaymentDate >= startDate &&
+                       e.PaymentDate <= endDate)
+            .OrderByDescending(e => e.PaymentDate) ?? Enumerable.Empty<Expense>();
     }
 }
